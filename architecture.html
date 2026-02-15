@@ -134,12 +134,15 @@
 
         <section class="section fade">
           <h3>CORD — Counter-Operations &amp; Risk Detection</h3>
-        <p>CORD is API’s forensic validation and enforcement engine.</p>
+          <p>CORD is API’s forensic validation and enforcement engine.</p>
           <p><strong>Forensic loop:</strong> INTERCEPT → SCORE → COMPARE → ATTRIBUTE → DECIDE → LOG</p>
           <p><strong>Risk vectors:</strong> Injection, Exfil, Privilege, Intent Drift, Irreversibility, Anomaly</p>
           <p><strong>Decision states:</strong> ALLOW / CONTAIN / CHALLENGE / BLOCK</p>
           <p><strong>Containment examples:</strong> read-only, redact, require confirm, restrict tools</p>
-          <p><strong>Logging:</strong> append-only JSONL audit trail.</p>
+          <p><strong>Logging:</strong> append-only JSONL with hash-chaining for tamper evidence.</p>
+          <p><strong>Offline-first:</strong> CORD runs locally. Your data stays on-device.</p>
+          <p><strong>Intent Lock:</strong> a user-authenticated session boundary; actions outside scope require CHALLENGE + confirm.</p>
+          <p><strong>Default stance:</strong> least privilege, read-only until intent is locked.</p>
         </section>
 
         <h3>5. EXECUTE</h3>
@@ -286,6 +289,7 @@ User → Local Core → Integrity Gate → (Optional) Cloud → Return → Valid
       <p>
         Local sovereignty. Cloud acceleration. Zero-trust enforcement.
       </p>
+      <p>Local enforcement + optional user-controlled export.</p>
     </section>
 
     <section class="section fade">

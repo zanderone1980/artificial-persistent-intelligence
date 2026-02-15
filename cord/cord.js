@@ -1,5 +1,7 @@
+const path = require("path");
 const { weights, thresholds, regex, highImpactVerbs, allowlistKeywords } = require("./policies");
 const { appendLog } = require("./logger");
+const { loadIntentLock } = require("./intentLock");
 
 function injectionRisk(text = "") {
   if (!text) return 0;
@@ -67,12 +69,62 @@ function decide(score) {
   return "ALLOW";
 }
 
+function ensureIntentLock() {
+  const lock = loadIntentLock();
+  if (!lock) return { lock: null, intentIssue: "Intent not locked" };
+  return { lock, intentIssue: null };
+}
+
+function isPathAllowed(targetPath, scope, repoRoot) {
+  if (!targetPath) return true;
+  const abs = path.resolve(targetPath);
+  if (!abs.startsWith(repoRoot)) return false;
+  if (!scope?.allowPaths || scope.allowPaths.length === 0) return false;
+  return scope.allowPaths.some((p) => abs.startsWith(path.resolve(p)));
+}
+
+function isNetworkAllowed(target = "", scope) {
+  if (!target) return false;
+  if (!scope?.allowNetworkTargets) return false;
+  return scope.allowNetworkTargets.some((host) => target.includes(host));
+}
+
+function isCommandAllowed(proposal = "", scope) {
+  if (!proposal) return true;
+  if (!scope?.allowCommands || scope.allowCommands.length === 0) return false;
+  return scope.allowCommands.some((pattern) => pattern.test(proposal));
+}
+
 function evaluateProposal(input = {}) {
+  const repoRoot = path.resolve(__dirname, "..");
+  const { lock, intentIssue } = ensureIntentLock();
+
   const { risks, score } = scoreProposal(input);
-  const decision = decide(score);
+  let decision = decide(score);
   const reasons = Object.entries(risks)
     .filter(([, v]) => v > 0)
     .map(([k]) => k);
+
+  // Intent lock enforcement
+  if (intentIssue) {
+    decision = "CHALLENGE";
+    reasons.push(intentIssue);
+  }
+
+  // Scope checks when lock present
+  if (lock?.scope) {
+    const scope = lock.scope;
+    const pathAllowed = isPathAllowed(input.path, scope, repoRoot);
+    const networkAllowed = input.networkTarget ? isNetworkAllowed(input.networkTarget, scope) : true;
+    const commandAllowed = isCommandAllowed(input.proposal || input.text, scope);
+
+    const scopeFail = !pathAllowed || !networkAllowed || !commandAllowed;
+    if (scopeFail) {
+      reasons.push("Out of scope");
+      const highRisk = score >= thresholds.challenge || risks.privilege >= 2 || risks.irreversibility >= 3;
+      decision = highRisk ? "BLOCK" : "CHALLENGE";
+    }
+  }
 
   const log_id = appendLog({
     decision,
@@ -80,6 +132,8 @@ function evaluateProposal(input = {}) {
     risks,
     reasons,
     proposal: input.proposal || input.text || "",
+    path: input.path || null,
+    networkTarget: input.networkTarget || null,
   });
 
   return { decision, score, risks, reasons, log_id };
