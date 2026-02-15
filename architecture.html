@@ -220,6 +220,64 @@ Subject to:
       </div>
     </section>
 
+    <section class="section fade">
+      <h2>Deployment Architecture — Local Sovereignty Model</h2>
+
+      <p>
+        Artificial Persistent Intelligence operates under a hybrid model:
+        local sovereignty by default, cloud acceleration by permission.
+      </p>
+
+      <h3>1. Local Core (Always On)</h3>
+      <ul>
+        <li>User identity verification and confidence scoring</li>
+        <li>Permission enforcement and scope control</li>
+        <li>Integrity validation gate</li>
+        <li>Drift detection</li>
+        <li>Encrypted user model storage</li>
+        <li>Immutable audit logging</li>
+      </ul>
+
+      <p>
+        The Local Core is the authority layer.
+        It cannot be overridden by external services.
+        It enforces all validation before any action occurs.
+      </p>
+
+      <h3>2. Cloud Acceleration (Optional)</h3>
+      <ul>
+        <li>Large-scale reasoning tasks</li>
+        <li>Long-form synthesis</li>
+        <li>Heavy compute operations</li>
+        <li>Model augmentation</li>
+      </ul>
+
+      <p>
+        Cloud usage is:
+      </p>
+      <ul>
+        <li>Explicitly authorized</li>
+        <li>Minimal-context only</li>
+        <li>Redacted when possible</li>
+        <li>Blocked if integrity gates fail</li>
+      </ul>
+
+      <h3>3. Zero-Trust Mediation</h3>
+      <p>
+        All communication between Local Core and Cloud services passes through
+        the Integrity Gate. No direct execution path exists.
+      </p>
+
+      <pre><code>
+User → Local Core → Integrity Gate → (Optional) Cloud → Return → Validate → Execute
+      </code></pre>
+
+      <h3>Principle</h3>
+      <p>
+        Local sovereignty. Cloud acceleration. Zero-trust enforcement.
+      </p>
+    </section>
+
     <footer class="fade">Architecture · API</footer>
   </main>
 
