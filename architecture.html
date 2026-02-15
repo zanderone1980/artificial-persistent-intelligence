@@ -60,7 +60,7 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="index.html">Home</a>
         <a href="manifesto.html">Manifesto</a>
-        <a href="wolf.html">Identity Signal</a>
+        <a href="wolf.html">[DIVISION NAME TBD]</a>
         <a href="architecture.html">Architecture</a>
         <a href="contact.html">Contact</a>
       </nav>
@@ -275,6 +275,48 @@ User → Local Core → Integrity Gate → (Optional) Cloud → Return → Valid
       <h3>Principle</h3>
       <p>
         Local sovereignty. Cloud acceleration. Zero-trust enforcement.
+      </p>
+    </section>
+
+    <section class="section fade">
+      <h2>Execution Authority — OS Control Model</h2>
+
+      <p>
+        API is not a chatbot. It is a Local Core that can mediate and execute operating-system actions — but only within a user-approved permission scope.
+        Its job is to enforce the user’s intent, block misuse, and keep a permanent audit trail.
+      </p>
+
+      <h3>Local Core (Authority Layer)</h3>
+      <ul>
+        <li><strong>Identity binding:</strong> continuously verifies the authenticated user context</li>
+        <li><strong>Permissions:</strong> explicit scopes for files, apps, network, and accounts</li>
+        <li><strong>Integrity Gate:</strong> validates every request before execution</li>
+        <li><strong>Policy engine:</strong> rules + risk thresholds + deny-by-default</li>
+        <li><strong>Encrypted memory:</strong> local storage of the user model and preferences</li>
+        <li><strong>Audit log:</strong> append-only record of every access and action</li>
+      </ul>
+
+      <h3>Integrity Gate (Zero-Trust Enforcement)</h3>
+      <p>
+        No direct execution path exists from an external model to the operating system.
+        All outputs must pass verification, boundary checks, and risk scoring before any OS action is allowed.
+      </p>
+
+      <pre><code>
+User → Local Core → Integrity Gate → (Optional) External Acceleration → Return → Validate → Execute
+      </code></pre>
+
+      <h3>External Acceleration (Optional)</h3>
+      <ul>
+        <li>Used only for heavy reasoning or synthesis</li>
+        <li>Receives minimal context (redacted when possible)</li>
+        <li>Never receives direct control of OS actions</li>
+        <li>Blocked automatically if integrity checks fail</li>
+      </ul>
+
+      <h3>Principle</h3>
+      <p>
+        Local authority. Optional acceleration. Zero-trust execution.
       </p>
     </section>
 
