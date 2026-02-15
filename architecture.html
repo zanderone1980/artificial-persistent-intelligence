@@ -60,7 +60,7 @@
       <nav class="nav-links" aria-label="Primary">
         <a href="index.html">Home</a>
         <a href="manifesto.html">Manifesto</a>
-        <a href="wolf.html">[DIVISION NAME TBD]</a>
+        <a href="wolf.html">CORD</a>
         <a href="architecture.html">Architecture</a>
         <a href="contact.html">Contact</a>
       </nav>
@@ -131,6 +131,16 @@
           <li>Drift detection</li>
         </ul>
         <p>If any gate fails, the action is blocked, logged, and requires explicit confirmation.</p>
+
+        <section class="section fade">
+          <h3>CORD — Counter-Operations &amp; Risk Detection</h3>
+        <p>CORD is API’s forensic validation and enforcement engine.</p>
+          <p><strong>Forensic loop:</strong> INTERCEPT → SCORE → COMPARE → ATTRIBUTE → DECIDE → LOG</p>
+          <p><strong>Risk vectors:</strong> Injection, Exfil, Privilege, Intent Drift, Irreversibility, Anomaly</p>
+          <p><strong>Decision states:</strong> ALLOW / CONTAIN / CHALLENGE / BLOCK</p>
+          <p><strong>Containment examples:</strong> read-only, redact, require confirm, restrict tools</p>
+          <p><strong>Logging:</strong> append-only JSONL audit trail.</p>
+        </section>
 
         <h3>5. EXECUTE</h3>
         <p>
