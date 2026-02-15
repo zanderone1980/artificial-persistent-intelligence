@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture · Artificial Persistent Intelligence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black:  #0a0a0a;
+      --white:  #f0f0f0;
+      --grey:   #888;
+      --accent: #ff3333;
+      --wolf:   #ff6600;
+      --dim:    #333;
+      --dark:   #111;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--black); color: var(--white); font-family: 'Space Mono', monospace; line-height: 1.6; }
+    a { color: inherit; text-decoration: none; }
+    .nav { position: fixed; top: 0; left: 0; right: 0; background: rgba(10,10,10,0.9); backdrop-filter: blur(6px); border-bottom: 1px solid var(--dim); z-index: 1000; }
+    .nav .inner { max-width: 1100px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .brand { font-family: 'Syne', sans-serif; font-size: 1.05rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .nav-links { display: flex; gap: 14px; align-items: center; }
+    .nav-links a { padding: 8px 10px; border-radius: 8px; transition: background 0.2s ease, color 0.2s ease; color: var(--grey); }
+    .nav-links a:hover, .nav-links a:focus { background: var(--dark); color: var(--white); }
+    .menu-toggle { display: none; background: var(--dark); color: var(--white); border: 1px solid var(--dim); border-radius: 8px; padding: 8px 10px; font-family: 'Space Mono', monospace; }
+    main { padding: 120px 20px 80px; max-width: 1100px; margin: 0 auto; }
+    .hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; align-items: center; margin-bottom: 48px; }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2.2rem, 4vw, 3.2rem); margin: 0 0 12px; letter-spacing: -0.02em; }
+    .tag { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--dim); border-radius: 999px; background: var(--dark); color: var(--grey); font-size: 0.9rem; }
+    .section { margin: 48px 0; border: 1px solid var(--dim); border-radius: 16px; padding: 24px; background: var(--dark); }
+    .section h2 { font-family: 'Syne', sans-serif; margin: 0 0 12px; font-size: 1.6rem; letter-spacing: -0.01em; }
+    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .card { padding: 18px; border: 1px solid var(--dim); border-radius: 12px; background: linear-gradient(145deg, #0c0c0c, #0e0e0e); min-height: 140px; }
+    .card h3 { font-family: 'Syne', sans-serif; margin: 0 0 10px; font-size: 1.2rem; }
+    .meta { color: var(--grey); font-size: 0.95rem; }
+    .list { padding-left: 18px; color: var(--white); }
+    .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 16px; }
+    .btn { padding: 12px 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--black); font-weight: 700; letter-spacing: 0.02em; transition: transform 0.15s ease, box-shadow 0.15s ease; font-family: 'Syne', sans-serif; }
+    .btn.secondary { background: transparent; color: var(--white); border-color: var(--dim); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255,51,51,0.2); }
+    .fade { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade.visible { opacity: 1; transform: translateY(0); }
+    footer { margin-top: 60px; padding: 20px 0 10px; color: var(--grey); font-size: 0.95rem; }
+    @media (max-width: 760px) {
+      .nav .inner { align-items: flex-start; }
+      .menu-toggle { display: inline-flex; }
+      .nav-links { position: absolute; top: 62px; left: 0; right: 0; flex-direction: column; padding: 12px 20px; background: var(--dark); border-top: 1px solid var(--dim); display: none; }
+      .nav-links.open { display: flex; }
+      main { padding-top: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="inner">
+      <div class="brand">Artificial Persistent Intelligence</div>
+      <button class="menu-toggle" aria-label="Toggle navigation">Menu</button>
+      <nav class="nav-links" aria-label="Primary">
+        <a href="index.html">Home</a>
+        <a href="manifesto.html">Manifesto</a>
+        <a href="wolf.html">Wolf</a>
+        <a href="architecture.html">Architecture</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero fade">
+      <div>
+        <p class="tag">Architecture · Reliability · Tempo</p>
+        <h1>API is an always-on stack built for clarity, speed, and control.</h1>
+        <p>Composable layers make sensing, reasoning, and action transparent. Each layer is observable, testable, and replaceable.</p>
+        <div class="cta-row">
+          <a class="btn" href="contact.html">Request a Walkthrough</a>
+          <a class="btn secondary" href="wolf.html">Review Wolf Signal</a>
+        </div>
+      </div>
+      <div class="section" style="margin:0;">
+        <h2>Stack Pillars</h2>
+        <ul class="list">
+          <li>Ingress: structured, unstructured, live streams with schema guards.</li>
+          <li>Reason: multi-model ensemble with policy sandboxes.</li>
+          <li>Act: reversible actions, human gates, and playbook binding.</li>
+          <li>Assure: audit, drift detection, chaos drills, and backups.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section fade">
+      <h2>Layer Map</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Sensor Mesh</h3>
+          <p class="meta">Cameras, telemetry, logs, and external intel normalized into events.</p>
+        </div>
+        <div class="card">
+          <h3>Context Fabric</h3>
+          <p class="meta">Temporal memory, embeddings, and policy-aware feature stores.</p>
+        </div>
+        <div class="card">
+          <h3>Reasoning Core</h3>
+          <p class="meta">Deterministic rules plus ML inference with adversarial scoring.</p>
+        </div>
+        <div class="card">
+          <h3>Action Switchboard</h3>
+          <p class="meta">Idempotent playbooks with dry-run, simulate, and rollback paths.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section fade">
+      <h2>Reliability Controls</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Health &amp; SLOs</h3>
+          <p class="meta">Per-layer error budgets with live dashboards and paging rules.</p>
+        </div>
+        <div class="card">
+          <h3>Security</h3>
+          <p class="meta">Identity, encryption, and policy enforcement baked into every call.</p>
+        </div>
+        <div class="card">
+          <h3>Testing</h3>
+          <p class="meta">Synthetic events, red-team scenarios, and steady chaos drills.</p>
+        </div>
+        <div class="card">
+          <h3>Resilience</h3>
+          <p class="meta">Graceful degradation with circuit breakers and queues.</p>
+        </div>
+      </div>
+      <div class="cta-row" style="margin-top:18px;">
+        <a class="btn" href="contact.html">Engage the Team</a>
+        <a class="btn secondary" href="manifesto.html">Return to Manifesto</a>
+      </div>
+    </section>
+
+    <footer class="fade">Architecture · API</footer>
+  </main>
+
+  <script>
+    (() => {
+      const navLinks = document.querySelector('.nav-links');
+      const toggle = document.querySelector('.menu-toggle');
+      if (toggle && navLinks) {
+        toggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+        navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', () => navLinks.classList.remove('open')));
+      }
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+      }, { threshold: 0.15 });
+      document.querySelectorAll('.fade').forEach(el => observer.observe(el));
+    })();
+  </script>
+</body>
+</html>
