@@ -134,15 +134,54 @@
 
         <section class="section fade">
           <h3>CORD — Counter-Operations &amp; Risk Detection</h3>
-          <p>CORD is API’s forensic validation and enforcement engine.</p>
-          <p><strong>Forensic loop:</strong> INTERCEPT → SCORE → COMPARE → ATTRIBUTE → DECIDE → LOG</p>
-          <p><strong>Risk vectors:</strong> Injection, Exfil, Privilege, Intent Drift, Irreversibility, Anomaly</p>
-          <p><strong>Decision states:</strong> ALLOW / CONTAIN / CHALLENGE / BLOCK</p>
-          <p><strong>Containment examples:</strong> read-only, redact, require confirm, restrict tools</p>
-          <p><strong>Logging:</strong> append-only JSONL with hash-chaining for tamper evidence.</p>
-          <p><strong>Offline-first:</strong> CORD runs locally. Your data stays on-device.</p>
-          <p><strong>Intent Lock:</strong> a user-authenticated session boundary; actions outside scope require CHALLENGE + confirm.</p>
-          <p><strong>Default stance:</strong> least privilege, read-only until intent is locked.</p>
+          <p>
+            Artificial Persistent Intelligence is not allowed to act freely.
+            Every proposed action is inspected by CORD — the forensic validation and enforcement layer built into API.
+          </p>
+
+          <p>
+            CORD exists to ensure that API remains aligned with the authenticated individual,
+            that no external influence overrides user intent,
+            and that no action exceeds the granted permission scope.
+          </p>
+
+          <h3>What CORD Does</h3>
+          <ul>
+            <li>Detects prompt injection attempts</li>
+            <li>Prevents data exfiltration</li>
+            <li>Enforces explicit permission boundaries</li>
+            <li>Monitors deviation from declared intent</li>
+            <li>Blocks irreversible or destructive operations without confirmation</li>
+            <li>Records every decision in a tamper-evident audit log</li>
+          </ul>
+
+          <h3>Offline-First Enforcement</h3>
+          <p>
+            CORD runs locally.
+            Your data remains on your device.
+            No external system can directly execute operating-system actions.
+            All outbound requests pass through a zero-trust validation gate.
+          </p>
+
+          <h3>Intent Lock</h3>
+          <p>
+            API requires an authenticated intent boundary.
+            Until intent is explicitly set and verified, API operates in read-only mode.
+            Actions outside that declared scope require escalation or are blocked entirely.
+          </p>
+
+          <h3>Audit as Authority</h3>
+          <p>
+            Every action, every validation decision, and every block is written to an append-only log.
+            Each entry is cryptographically chained to the previous entry.
+            Tampering becomes detectable.
+            Transparency is not optional.
+          </p>
+
+          <p>
+            API is not optimized for engagement.
+            It is optimized for alignment, containment, and outcome integrity.
+          </p>
         </section>
 
         <h3>5. EXECUTE</h3>
@@ -331,6 +370,49 @@ User → Local Core → Integrity Gate → (Optional) External Acceleration → 
       <h3>Principle</h3>
       <p>
         Local authority. Optional acceleration. Zero-trust execution.
+      </p>
+    </section>
+
+    <section class="section fade">
+      <div class="meta" style="letter-spacing:0.25em;text-transform:uppercase;font-size:0.75rem;margin-bottom:0.75rem;color:var(--grey);">
+        Execution Model
+      </div>
+      <h2>API as the Command Mediator</h2>
+
+      <p>
+        API does not “take over” your system. It becomes the gate in front of system actions.
+        Instead of running commands directly, commands are routed through API and inspected by CORD
+        before anything executes.
+      </p>
+
+      <div class="section" style="margin:1.5rem 0; padding:1.5rem; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02);">
+        <p class="meta" style="margin:0; line-height:1.9; color:#ccc;">
+          <strong style="color:var(--white);">Instead of:</strong><br>
+          <span style="color:#999;">rm -rf ~/Downloads/junk</span><br><br>
+          <strong style="color:var(--white);">You run:</strong><br>
+          <span style="color:#999;">api rm -rf ~/Downloads/junk</span>
+        </p>
+      </div>
+
+      <h3>CORD Enforcement Rules</h3>
+      <ul class="list">
+        <li><strong>Default Deny:</strong> actions are blocked unless explicitly permitted.</li>
+        <li><strong>Intent Lock:</strong> API must have a declared objective + scope before it can act.</li>
+        <li><strong>Permission Boundaries:</strong> filesystem/network/process access is scoped and enforced.</li>
+        <li><strong>Irreversible Guard:</strong> destructive operations require an explicit confirmation step.</li>
+        <li><strong>No Silent Network:</strong> outbound calls require validation and user-visible justification.</li>
+        <li><strong>Audit as Authority:</strong> every allow/block is logged in an append-only chain.</li>
+      </ul>
+
+      <h3>Offline-First</h3>
+      <p>
+        CORD runs locally. Your data remains on your device.
+        The mediator is built to function offline as the default state — connectivity is a choice, not a dependency.
+      </p>
+
+      <p class="meta" style="color:#ccc;">
+        This is how a personal intelligence gains capability without becoming a liability:
+        power routed through verification, and verification rooted in the user.
       </p>
     </section>
 

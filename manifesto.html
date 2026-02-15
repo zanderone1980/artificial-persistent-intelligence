@@ -137,6 +137,48 @@
     <footer class="fade">Manifesto · API</footer>
   </main>
 
+  <section class="section fade" style="max-width: 720px; margin: 0 auto; padding: 4rem 2rem;">
+    <div class="meta" style="letter-spacing:0.3em;text-transform:uppercase;font-size:0.65rem;margin-bottom:1rem;color:var(--grey);">
+      Execution Model
+    </div>
+
+    <h2 style="font-family:'Syne',sans-serif;font-weight:800;letter-spacing:-0.02em;line-height:1.1;margin:0 0 1.25rem;">
+      API Doesn’t Act Directly. It Mediates.
+    </h2>
+
+    <p style="color:#ccc;line-height:1.85;margin:0 0 1rem;">
+      API is not a chatbot that “suggests.”
+      It is a persistent intelligence that can operate — but only through a gate.
+      That gate is CORD.
+    </p>
+
+    <p style="color:#ccc;line-height:1.85;margin:0 0 1rem;">
+      The execution model is simple:
+      system actions are not executed raw.
+      They are routed through API, validated, and either allowed or blocked.
+    </p>
+
+    <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);padding:1.5rem;margin:1.5rem 0;">
+      <p style="margin:0;color:#aaa;line-height:1.9;font-size:.95rem;">
+        <strong style="color:#f0f0f0;">Instead of:</strong><br>
+        <span style="color:#999;">git push</span><br><br>
+        <strong style="color:#f0f0f0;">You run:</strong><br>
+        <span style="color:#999;">api git push</span>
+      </p>
+    </div>
+
+    <p style="color:#ccc;line-height:1.85;margin:0 0 1rem;">
+      If the action violates intent, scope, or permission boundaries, CORD blocks it.
+      If it’s destructive, CORD forces explicit confirmation.
+      If it touches sensitive data, CORD requires justification and logs the decision.
+    </p>
+
+    <p style="color:#aaa;line-height:1.85;margin:0;">
+      Capability without containment is a threat.
+      API is built to be capable and contained — by design.
+    </p>
+  </section>
+
   <script>
     (() => {
       const navLinks = document.querySelector('.nav-links');
