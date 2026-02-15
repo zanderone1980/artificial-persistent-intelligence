@@ -90,50 +90,124 @@
     </section>
 
     <section class="section fade">
-      <h2>Layer Map</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>Sensor Mesh</h3>
-          <p class="meta">Cameras, telemetry, logs, and external intel normalized into events.</p>
-        </div>
-        <div class="card">
-          <h3>Context Fabric</h3>
-          <p class="meta">Temporal memory, embeddings, and policy-aware feature stores.</p>
-        </div>
-        <div class="card">
-          <h3>Reasoning Core</h3>
-          <p class="meta">Deterministic rules plus ML inference with adversarial scoring.</p>
-        </div>
-        <div class="card">
-          <h3>Action Switchboard</h3>
-          <p class="meta">Idempotent playbooks with dry-run, simulate, and rollback paths.</p>
-        </div>
-      </div>
-    </section>
+      <h2>Artificial Persistent Intelligence — The Core Algorithm</h2>
+      <p class="meta">Artificial Persistent Intelligence can be described as a constrained decision system operating over a personalized state space.</p>
+      <pre class="meta" style="white-space: pre-wrap;">
+Let:
+  • S_t = User state at time t
+  • M_t = User model at time t
+  • A_t = Candidate action set
+  • R(a) = Expected outcome value of action a
+  • C(a) = Cost function (time, energy, risk)
+  • P(a) = Permission function
+  • I(a) = Intent alignment score
+  • D(a) = Drift / anomaly score
+  • L_t = Immutable audit log
+      </pre>
 
-    <section class="section fade">
-      <h2>Reliability Controls</h2>
+      <pre class="meta" style="white-space: pre-wrap;">
+1. State Update
+
+S_t = f(\text{user inputs}, \text{context}, \text{history}, \text{constraints})
+
+M_t = g(M_{t-1}, S_t, \text{outcomes})
+
+Where:
+  • f captures authorized observation
+  • g updates personalization based only on measurable outcomes
+      </pre>
+
+      <pre class="meta" style="white-space: pre-wrap;">
+2. Action Proposal
+
+API generates candidate actions:
+
+A_t = \{a_1, a_2, ..., a_n\}
+
+Each action is scored:
+
+Score(a) = R(a) - C(a)
+
+Where:
+  • R(a) estimates expected user outcome improvement
+  • C(a) incorporates risk weighting and irreversibility penalties
+      </pre>
+
+      <pre class="meta" style="white-space: pre-wrap;">
+3. Validation Gate
+
+An action is executable only if:
+
+P(a) = 1
+
+I(a) \ge \theta_{intent}
+
+D(a) \le \theta_{drift}
+
+Risk(a) \le \theta_{risk}
+
+If any constraint fails:
+
+Execute(a) = 0
+
+All validation decisions are appended to:
+
+L_t = L_{t-1} \cup \text{decision entry}
+      </pre>
+
+      <pre class="meta" style="white-space: pre-wrap;">
+4. Execution
+
+If validated:
+
+Outcome_t = Execute(a^*)
+
+Where:
+
+a^* = \arg\max_{a \in A_t} Score(a)
+      </pre>
+
+      <pre class="meta" style="white-space: pre-wrap;">
+5. Learning
+
+Model update:
+
+M_{t+1} = Update(M_t, Outcome_t)
+
+Learning is outcome-weighted, not engagement-weighted.
+      </pre>
+
+      <pre class="meta" style="white-space: pre-wrap;">
+6. Optimization Objective
+
+API seeks to maximize:
+
+\sum_{t=0}^{T} U(S_t, M_t)
+
+Subject to:
+  • Permission constraints
+  • Data minimization
+  • Risk bounds
+  • Drift containment
+  • User sovereignty
+
+Where:
+
+U is user-specific utility — defined by explicit goals and demonstrated outcomes.
+      </pre>
+
       <div class="grid">
         <div class="card">
-          <h3>Health &amp; SLOs</h3>
-          <p class="meta">Per-layer error budgets with live dashboards and paging rules.</p>
+          <h3>What This Signals</h3>
+          <ul class="list" style="margin: 0;">
+            <li>API is a constrained optimizer</li>
+            <li>API is identity-bound</li>
+            <li>API is risk-aware</li>
+            <li>API is audit-enforced</li>
+            <li>API cannot execute without satisfying structural constraints</li>
+          </ul>
+          <p class="meta" style="margin-top: 12px;">That makes it infrastructure. Not just philosophy.</p>
         </div>
-        <div class="card">
-          <h3>Security</h3>
-          <p class="meta">Identity, encryption, and policy enforcement baked into every call.</p>
-        </div>
-        <div class="card">
-          <h3>Testing</h3>
-          <p class="meta">Synthetic events, red-team scenarios, and steady chaos drills.</p>
-        </div>
-        <div class="card">
-          <h3>Resilience</h3>
-          <p class="meta">Graceful degradation with circuit breakers and queues.</p>
-        </div>
-      </div>
-      <div class="cta-row" style="margin-top:18px;">
-        <a class="btn" href="contact.html">Engage the Team</a>
-        <a class="btn secondary" href="manifesto.html">Return to Manifesto</a>
       </div>
     </section>
 
