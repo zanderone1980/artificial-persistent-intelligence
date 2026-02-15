@@ -68,146 +68,155 @@
   </header>
 
   <main>
-    <section class="hero fade">
-      <div>
-        <p class="tag">Architecture · Reliability · Tempo</p>
-        <h1>API is an always-on stack built for clarity, speed, and control.</h1>
-        <p>Composable layers make sensing, reasoning, and action transparent. Each layer is observable, testable, and replaceable.</p>
-        <div class="cta-row">
-          <a class="btn" href="contact.html">Request a Walkthrough</a>
-          <a class="btn secondary" href="wolf.html">Review Identity Signal</a>
-        </div>
-      </div>
-      <div class="section" style="margin:0;">
-        <h2>Stack Pillars</h2>
-        <ul class="list">
-          <li>Ingress: structured, unstructured, live streams with schema guards.</li>
-          <li>Reason: multi-model ensemble with policy sandboxes.</li>
-          <li>Act: reversible actions, human gates, and playbook binding.</li>
-          <li>Assure: audit, drift detection, chaos drills, and backups.</li>
+    <section class="architecture-page">
+      <div class="architecture-inner">
+
+        <h1>Artificial Persistent Intelligence</h1>
+        <h2>The Core Algorithm</h2>
+
+        <p>
+          Artificial Persistent Intelligence (API) is not a chatbot.
+          It is a closed-loop system designed to align with a single authenticated individual
+          and continuously optimize their outcomes while preventing drift, compromise, and misuse.
+        </p>
+
+        <p><strong>API runs one persistent loop:</strong></p>
+        <p><strong>OBSERVE → MODEL → PROPOSE → VALIDATE → EXECUTE → AUDIT → LEARN</strong></p>
+
+        <h3>1. OBSERVE</h3>
+        <p>
+          API captures only what the user explicitly authorizes:
+        </p>
+        <ul>
+          <li>Stated goals and active intentions</li>
+          <li>Environmental context (time, device, workload)</li>
+          <li>Connected systems (if granted)</li>
+          <li>Historical outcomes</li>
+          <li>Risk posture and constraint boundaries</li>
         </ul>
-      </div>
-    </section>
+        <p>No ambient harvesting. No unnecessary collection.</p>
 
-    <section class="section fade">
-      <h2>Artificial Persistent Intelligence — The Core Algorithm</h2>
-      <p class="meta">Artificial Persistent Intelligence can be described as a constrained decision system operating over a personalized state space.</p>
-      <pre class="meta" style="white-space: pre-wrap;">
+        <h3>2. MODEL</h3>
+        <p>
+          API maintains a private user model:
+        </p>
+        <ul>
+          <li>Long-term goals</li>
+          <li>Short-term objectives</li>
+          <li>Personal constraints (time, money, energy, obligations)</li>
+          <li>Execution capability</li>
+          <li>Behavioral patterns</li>
+          <li>Historical success and failure signals</li>
+        </ul>
+        <p>The model evolves from real outcomes — not engagement metrics.</p>
+
+        <h3>3. PROPOSE</h3>
+        <p>API generates ranked action proposals:</p>
+        <ul>
+          <li>Advisory actions (recommendations)</li>
+          <li>Assistive actions (drafts, preparation, automation support)</li>
+          <li>Executable actions (within authorized scope only)</li>
+        </ul>
+        <p>Each proposal includes expected benefit, cost, data touched, required permissions, and a reversibility plan.</p>
+
+        <h3>4. VALIDATE (Integrity Gate)</h3>
+        <p>No action proceeds without validation.</p>
+        <ul>
+          <li>Identity confidence</li>
+          <li>Permission scope</li>
+          <li>Intent alignment</li>
+          <li>Risk threshold compliance</li>
+          <li>Data minimization</li>
+          <li>Reversibility</li>
+          <li>Drift detection</li>
+        </ul>
+        <p>If any gate fails, the action is blocked, logged, and requires explicit confirmation.</p>
+
+        <h3>5. EXECUTE</h3>
+        <p>
+          If validated, API executes at the lowest necessary level of autonomy.
+          Advisory by default. Automation only where explicitly granted.
+        </p>
+
+        <h3>6. AUDIT</h3>
+        <p>
+          Every proposal, decision, and execution is written to an append-only log.
+          The audit record is user-owned and reviewable.
+        </p>
+
+        <h3>7. LEARN</h3>
+        <p>
+          API updates its user model only from measurable outcomes.
+          It learns from reality, not conversation length.
+        </p>
+
+        <hr>
+
+        <h2>Formal Model of API</h2>
+
+        <p>
+          Artificial Persistent Intelligence can be described as a constrained decision system
+          operating over a personalized state space.
+        </p>
+
+        <pre><code>
 Let:
-  • S_t = User state at time t
-  • M_t = User model at time t
-  • A_t = Candidate action set
-  • R(a) = Expected outcome value of action a
-  • C(a) = Cost function (time, energy, risk)
-  • P(a) = Permission function
-  • I(a) = Intent alignment score
-  • D(a) = Drift / anomaly score
-  • L_t = Immutable audit log
-      </pre>
 
-      <pre class="meta" style="white-space: pre-wrap;">
-1. State Update
+S_t = User state at time t
+M_t = User model at time t
+A_t = Candidate action set
+R(a) = Expected outcome value
+C(a) = Cost function (time, energy, risk)
+P(a) = Permission function
+I(a) = Intent alignment score
+D(a) = Drift score
+L_t = Immutable audit log
+        </code></pre>
 
-S_t = f(\text{user inputs}, \text{context}, \text{history}, \text{constraints})
+        <h3>State Update</h3>
+        <pre><code>
+S_t = f(user inputs, context, history, constraints)
 
-M_t = g(M_{t-1}, S_t, \text{outcomes})
+M_t = g(M_{t-1}, S_t, outcomes)
+        </code></pre>
 
-Where:
-  • f captures authorized observation
-  • g updates personalization based only on measurable outcomes
-      </pre>
-
-      <pre class="meta" style="white-space: pre-wrap;">
-2. Action Proposal
-
-API generates candidate actions:
-
-A_t = \{a_1, a_2, ..., a_n\}
-
-Each action is scored:
-
+        <h3>Action Scoring</h3>
+        <pre><code>
 Score(a) = R(a) - C(a)
+        </code></pre>
 
-Where:
-  • R(a) estimates expected user outcome improvement
-  • C(a) incorporates risk weighting and irreversibility penalties
-      </pre>
-
-      <pre class="meta" style="white-space: pre-wrap;">
-3. Validation Gate
-
-An action is executable only if:
-
+        <h3>Validation Conditions</h3>
+        <pre><code>
 P(a) = 1
+I(a) ≥ θ_intent
+D(a) ≤ θ_drift
+Risk(a) ≤ θ_risk
+        </code></pre>
 
-I(a) \ge \theta_{intent}
+        <p>If any condition fails, Execute(a) = 0 and the event is logged.</p>
 
-D(a) \le \theta_{drift}
+        <h3>Execution</h3>
+        <pre><code>
+a* = argmax Score(a)
+Outcome_t = Execute(a*)
+        </code></pre>
 
-Risk(a) \le \theta_{risk}
-
-If any constraint fails:
-
-Execute(a) = 0
-
-All validation decisions are appended to:
-
-L_t = L_{t-1} \cup \text{decision entry}
-      </pre>
-
-      <pre class="meta" style="white-space: pre-wrap;">
-4. Execution
-
-If validated:
-
-Outcome_t = Execute(a^*)
-
-Where:
-
-a^* = \arg\max_{a \in A_t} Score(a)
-      </pre>
-
-      <pre class="meta" style="white-space: pre-wrap;">
-5. Learning
-
-Model update:
-
+        <h3>Learning</h3>
+        <pre><code>
 M_{t+1} = Update(M_t, Outcome_t)
+        </code></pre>
 
-Learning is outcome-weighted, not engagement-weighted.
-      </pre>
-
-      <pre class="meta" style="white-space: pre-wrap;">
-6. Optimization Objective
-
-API seeks to maximize:
-
-\sum_{t=0}^{T} U(S_t, M_t)
-
+        <h3>Optimization Objective</h3>
+        <pre><code>
+Maximize Σ U(S_t, M_t)
 Subject to:
-  • Permission constraints
-  • Data minimization
-  • Risk bounds
-  • Drift containment
-  • User sovereignty
+- Permission constraints
+- Data minimization
+- Risk bounds
+- Drift containment
+- User sovereignty
+        </code></pre>
 
-Where:
-
-U is user-specific utility — defined by explicit goals and demonstrated outcomes.
-      </pre>
-
-      <div class="grid">
-        <div class="card">
-          <h3>What This Signals</h3>
-          <ul class="list" style="margin: 0;">
-            <li>API is a constrained optimizer</li>
-            <li>API is identity-bound</li>
-            <li>API is risk-aware</li>
-            <li>API is audit-enforced</li>
-            <li>API cannot execute without satisfying structural constraints</li>
-          </ul>
-          <p class="meta" style="margin-top: 12px;">That makes it infrastructure. Not just philosophy.</p>
-        </div>
       </div>
     </section>
 
