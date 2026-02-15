@@ -1,154 +1,243 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contact · Artificial Persistent Intelligence</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — API</title>
+  <meta name="description" content="Looking for a technical co-founder to build Artificial Persistent Intelligence." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --black:  #0a0a0a;
-      --white:  #f0f0f0;
-      --grey:   #888;
-      --accent: #ff3333;
-      --wolf:   #ff6600;
-      --dim:    #333;
-      --dark:   #111;
+    :root { --black:#0a0a0a; --white:#f0f0f0; --grey:#888; --accent:#ff3333; --wolf:#ff6600; --dim:#333; --dark:#111; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    ::selection { background: var(--accent); color: var(--black); }
+    body { background:var(--black); color:var(--white); font-family:'Space Mono', monospace; overflow-x:hidden; line-height:1.7; }
+
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      display:flex; justify-content:space-between; align-items:center;
+      padding:1.5rem 3rem;
+      background: rgba(10,10,10,0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
     }
-    * { box-sizing: border-box; }
-    body { margin: 0; background: var(--black); color: var(--white); font-family: 'Space Mono', monospace; line-height: 1.6; }
-    a { color: inherit; text-decoration: none; }
-    .nav { position: fixed; top: 0; left: 0; right: 0; background: rgba(10,10,10,0.9); backdrop-filter: blur(6px); border-bottom: 1px solid var(--dim); z-index: 1000; }
-    .nav .inner { max-width: 1100px; margin: 0 auto; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-    .brand { font-family: 'Syne', sans-serif; font-size: 1.05rem; letter-spacing: 0.08em; text-transform: uppercase; }
-    .nav-links { display: flex; gap: 14px; align-items: center; }
-    .nav-links a { padding: 8px 10px; border-radius: 8px; transition: background 0.2s ease, color 0.2s ease; color: var(--grey); }
-    .nav-links a:hover, .nav-links a:focus { background: var(--dark); color: var(--white); }
-    .menu-toggle { display: none; background: var(--dark); color: var(--white); border: 1px solid var(--dim); border-radius: 8px; padding: 8px 10px; font-family: 'Space Mono', monospace; }
-    main { padding: 120px 20px 80px; max-width: 1100px; margin: 0 auto; }
-    .hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; align-items: center; margin-bottom: 48px; }
-    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2.2rem, 4vw, 3.2rem); margin: 0 0 12px; letter-spacing: -0.02em; }
-    .tag { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--dim); border-radius: 999px; background: var(--dark); color: var(--grey); font-size: 0.9rem; }
-    .section { margin: 48px 0; border: 1px solid var(--dim); border-radius: 16px; padding: 24px; background: var(--dark); }
-    .section h2 { font-family: 'Syne', sans-serif; margin: 0 0 12px; font-size: 1.6rem; letter-spacing: -0.01em; }
-    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-    .card { padding: 18px; border: 1px solid var(--dim); border-radius: 12px; background: linear-gradient(145deg, #0c0c0c, #0e0e0e); min-height: 140px; }
-    .card h3 { font-family: 'Syne', sans-serif; margin: 0 0 10px; font-size: 1.2rem; }
-    .meta { color: var(--grey); font-size: 0.95rem; }
-    .list { padding-left: 18px; color: var(--white); }
-    .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 16px; }
-    .btn { padding: 12px 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--black); font-weight: 700; letter-spacing: 0.02em; transition: transform 0.15s ease, box-shadow 0.15s ease; font-family: 'Syne', sans-serif; }
-    .btn.secondary { background: transparent; color: var(--white); border-color: var(--dim); }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255,51,51,0.2); }
-    .fade { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
-    .fade.visible { opacity: 1; transform: translateY(0); }
-    footer { margin-top: 60px; padding: 20px 0 10px; color: var(--grey); font-size: 0.95rem; }
-    @media (max-width: 760px) {
-      .nav .inner { align-items: flex-start; }
-      .menu-toggle { display: inline-flex; }
-      .nav-links { position: absolute; top: 62px; left: 0; right: 0; flex-direction: column; padding: 12px 20px; background: var(--dark); border-top: 1px solid var(--dim); display: none; }
-      .nav-links.open { display: flex; }
-      main { padding-top: 120px; }
+    .nav-logo {
+      font-family:'Syne', sans-serif;
+      font-weight:800; font-size:1.3rem;
+      text-decoration:none; color:var(--white);
+    }
+    .nav-logo .dot { color: var(--accent); }
+
+    .nav-links { display:flex; gap:2.5rem; align-items:center; }
+    .nav-links a {
+      font-size:0.7rem; letter-spacing:0.15em;
+      text-transform:uppercase; text-decoration:none;
+      color:var(--grey); transition: color .25s ease, background .25s ease, border-color .25s ease;
+    }
+    .nav-links a:hover { color: var(--white); }
+    .nav-cta {
+      font-size:0.65rem !important;
+      letter-spacing:0.15em !important;
+      padding:0.6rem 1.5rem;
+      border:1px solid var(--accent);
+      color: var(--accent) !important;
+    }
+    .nav-cta:hover { background:var(--accent); color:var(--black) !important; }
+
+    .mobile-menu-btn {
+      display:none;
+      background:none; border:none; cursor:pointer;
+      padding:0.5rem;
+    }
+    .mobile-menu-btn span {
+      display:block; width:20px; height:1px;
+      background:var(--white); margin:5px 0;
+      transition: transform .2s ease, opacity .2s ease;
+    }
+
+    .contact-page {
+      min-height:100vh;
+      display:flex; align-items:center; justify-content:center;
+      padding:8rem 2rem 4rem;
+    }
+    .contact-inner { max-width:640px; width:100%; }
+
+    .contact-label {
+      font-size:0.7rem; letter-spacing:0.5em;
+      text-transform:uppercase; color:var(--accent);
+      margin-bottom:2rem;
+      opacity:0; animation: fadeUp 1s ease .2s forwards;
+    }
+    .contact-title {
+      font-family:'Syne', sans-serif;
+      font-weight:800;
+      font-size:clamp(2.5rem, 6vw, 4rem);
+      letter-spacing:-0.03em;
+      line-height:1.05;
+      margin-bottom:2rem;
+      opacity:0; animation: fadeUp 1s ease .4s forwards;
+    }
+    .contact-text {
+      font-size:0.95rem;
+      color:#ccc;
+      line-height:1.85;
+      margin-bottom:1.2rem;
+      opacity:0; animation: fadeUp 1s ease .6s forwards;
+    }
+
+    .contact-looking {
+      margin:3rem 0;
+      padding:2rem 0;
+      border-top:1px solid rgba(255,255,255,0.05);
+      border-bottom:1px solid rgba(255,255,255,0.05);
+      opacity:0; animation: fadeUp 1s ease .8s forwards;
+    }
+    .contact-looking-title {
+      font-family:'Syne', sans-serif;
+      font-weight:700;
+      font-size:1.1rem;
+      margin-bottom:1.5rem;
+      color:var(--white);
+    }
+    .looking-item {
+      padding:0.6rem 0;
+      font-size:0.88rem;
+      color:#aaa;
+      line-height:1.6;
+      display:flex; gap:1rem;
+    }
+    .looking-bullet { color:var(--accent); font-weight:700; flex-shrink:0; }
+
+    .contact-cta { margin-top:3rem; opacity:0; animation: fadeUp 1s ease 1s forwards; }
+    .contact-email-label {
+      font-size:0.65rem;
+      letter-spacing:0.3em;
+      text-transform:uppercase;
+      color:var(--grey);
+      margin-bottom:1rem;
+    }
+    .contact-email {
+      font-family:'Syne', sans-serif;
+      font-weight:700;
+      font-size:clamp(1.2rem, 3vw, 1.8rem);
+      color:var(--accent);
+      text-decoration:none;
+      transition: color .25s ease;
+      display:inline-block;
+      margin-bottom:2rem;
+    }
+    .contact-email:hover { color: var(--white); }
+
+    .contact-github { margin-top:2rem; }
+    .contact-github-label {
+      font-size:0.65rem;
+      letter-spacing:0.3em;
+      text-transform:uppercase;
+      color:var(--grey);
+      margin-bottom:1rem;
+    }
+    .contact-github a {
+      font-size:0.9rem;
+      color:var(--grey);
+      text-decoration:none;
+      transition: color .25s ease;
+      word-break: break-word;
+    }
+    .contact-github a:hover { color: var(--white); }
+
+    footer {
+      padding:3rem;
+      display:flex; justify-content:space-between; align-items:center;
+      border-top:1px solid rgba(255,255,255,0.04);
+    }
+    .footer-left {
+      font-size:0.65rem;
+      letter-spacing:0.15em;
+      color:var(--dim);
+      text-transform:uppercase;
+    }
+    .footer-links { display:flex; gap:2rem; }
+    .footer-links a {
+      font-size:0.65rem;
+      letter-spacing:0.1em;
+      text-transform:uppercase;
+      text-decoration:none;
+      color:var(--dim);
+      transition: color .25s ease;
+    }
+    .footer-links a:hover { color: var(--grey); }
+
+    @keyframes fadeUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+
+    @media (max-width:768px) {
+      nav { padding:1.2rem 1.5rem; }
+      .nav-links {
+        display:none;
+        position:absolute; top:100%; left:0; right:0;
+        background: rgba(10,10,10,0.98);
+        flex-direction:column;
+        padding:2rem;
+        gap:1.5rem;
+        border-bottom:1px solid rgba(255,255,255,0.05);
+      }
+      .nav-links.open { display:flex; }
+      .mobile-menu-btn { display:block; }
+      .contact-page { padding:7rem 1.5rem 3rem; }
+      footer { flex-direction:column; gap:1.5rem; text-align:center; }
     }
   </style>
 </head>
 <body>
-  <header class="nav">
-    <div class="inner">
-      <div class="brand">Artificial Persistent Intelligence</div>
-      <button class="menu-toggle" aria-label="Toggle navigation">Menu</button>
-      <nav class="nav-links" aria-label="Primary">
-        <a href="index.html">Home</a>
-        <a href="manifesto.html">Manifesto</a>
-        <a href="wolf.html">Identity Signal</a>
-        <a href="architecture.html">Architecture</a>
-        <a href="contact.html">Contact</a>
-      </nav>
+  <nav>
+    <a href="index.html" class="nav-logo">A<span class="dot">.</span>P<span class="dot">.</span>I<span class="dot">.</span></a>
+    <button class="mobile-menu-btn" aria-label="Toggle menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links">
+      <a href="manifesto.html">Manifesto</a>
+      <a href="wolf.html">The Wolf</a>
+      <a href="architecture.html">Architecture</a>
+      <a href="contact.html" class="nav-cta">Let's Talk</a>
     </div>
-  </header>
+  </nav>
 
-  <main>
-    <section class="hero fade">
-      <div>
-        <p class="tag">Contact · Alignment · Response</p>
-        <h1>Open a channel with the API team.</h1>
-        <p>Reach out for architecture reviews, deployment guidance, or to shape an identity-bound signal for your environment.</p>
-        <div class="cta-row">
-          <a class="btn" href="mailto:team@artificialpersistentintel.example">Email</a>
-          <a class="btn secondary" href="architecture.html">Review Architecture</a>
+  <section class="contact-page">
+    <div class="contact-inner">
+      <div class="contact-label">Let's Build This</div>
+      <h1 class="contact-title">I'm looking for one person.</h1>
+      <p class="contact-text">I have the vision for what AI should become — a persistent intelligence that serves the individual and a watchdog system that keeps all AI honest. I can build anything physical. I think in systems. I see where this is going.</p>
+      <p class="contact-text">What I need is a technical co-founder. Someone who can write the code. Someone who reads this and doesn't think "interesting idea" — they think "I know how to build that."</p>
+
+      <div class="contact-looking">
+        <div class="contact-looking-title">What I'm looking for:</div>
+        <div class="looking-item"><span class="looking-bullet">→</span> Someone who can build AI systems, not just talk about them</div>
+        <div class="looking-item"><span class="looking-bullet">→</span> Experience with ML/AI, security architecture, or distributed systems</div>
+        <div class="looking-item"><span class="looking-bullet">→</span> Someone who sees the same future and wants to define it</div>
+        <div class="looking-item"><span class="looking-bullet">→</span> Willing to start from zero and build something that matters</div>
+        <div class="looking-item"><span class="looking-bullet">→</span> Values truth over comfort and outcomes over hype</div>
+      </div>
+
+      <div class="contact-cta">
+        <div class="contact-email-label">Reach out</div>
+        <a href="mailto:alex@zanderpink.com" class="contact-email">alex@zanderpink.com</a>
+
+        <div class="contact-github">
+          <div class="contact-github-label">See the code</div>
+          <a href="https://github.com/zanderone1980/artificial-persistent-intelligence" target="_blank" rel="noopener noreferrer">github.com/zanderone1980/artificial-persistent-intelligence</a>
         </div>
       </div>
-      <div class="section" style="margin:0;">
-        <h2>Engagement Modes</h2>
-        <ul class="list">
-          <li>Readiness Assessment: evaluate your sensing, response, and recovery posture.</li>
-          <li>Deployment Sprint: stand up API primitives with clear SLOs and observability.</li>
-          <li>Signal Calibration: review how the system learns and reflect your intent.</li>
-          <li>Operator Training: empower teams with playbooks and explainable tooling.</li>
-        </ul>
-      </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="section fade">
-      <h2>Signals We Value</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>Urgency</h3>
-          <p class="meta">Active incidents needing containment guidance.</p>
-        </div>
-        <div class="card">
-          <h3>Integration</h3>
-          <p class="meta">Hooks into your observability, IAM, and automation layers.</p>
-        </div>
-        <div class="card">
-          <h3>Policy</h3>
-          <p class="meta">Governance needs across jurisdictions and compliance regimes.</p>
-        </div>
-        <div class="card">
-          <h3>Scale</h3>
-          <p class="meta">Performance envelopes and resilience targets we must meet.</p>
-        </div>
-      </div>
-    </section>
-
-    <section class="section fade">
-      <h2>Direct Lines</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>Secure Email</h3>
-          <p class="meta"><a href="mailto:team@artificialpersistentintel.example">team@artificialpersistentintel.example</a></p>
-        </div>
-        <div class="card">
-          <h3>Escalation</h3>
-          <p class="meta">Use your identity keywords to prioritize routing and follow-up.</p>
-        </div>
-        <div class="card">
-          <h3>Hours</h3>
-          <p class="meta">Persistent monitoring; staffed human response during business hours.</p>
-        </div>
-      </div>
-      <div class="cta-row" style="margin-top:18px;">
-        <a class="btn" href="index.html">Return Home</a>
-        <a class="btn secondary" href="manifesto.html">Manifesto</a>
-      </div>
-    </section>
-
-    <footer class="fade">Contact · API</footer>
-  </main>
-
-  <script>
-    (() => {
-      const navLinks = document.querySelector('.nav-links');
-      const toggle = document.querySelector('.menu-toggle');
-      if (toggle && navLinks) {
-        toggle.addEventListener('click', () => navLinks.classList.toggle('open'));
-        navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', () => navLinks.classList.remove('open')));
-      }
-      const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
-      }, { threshold: 0.15 });
-      document.querySelectorAll('.fade').forEach(el => observer.observe(el));
-    })();
-  </script>
+  <footer>
+    <div class="footer-left">API — Artificial Persistent Intelligence — Alex, February 2025</div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="manifesto.html">Manifesto</a>
+      <a href="wolf.html">The Wolf</a>
+      <a href="architecture.html">Architecture</a>
+    </div>
+  </footer>
 </body>
 </html>
