@@ -6,8 +6,9 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Allow running from any location
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# Point to the actual cord_engine location
+CORD_ROOT = Path.home() / "ClaudeWork" / "artificial-persistent-intelligence"
+sys.path.insert(0, str(CORD_ROOT))
 
 from cord_engine.intent_lock import load_intent_lock, DEFAULT_LOCK_PATH
 from cord_engine.audit_log import verify_chain, read_log, DEFAULT_LOG_PATH

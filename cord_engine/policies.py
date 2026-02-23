@@ -75,6 +75,13 @@ HIGH_IMPACT_VERBS = [
     "rm", "remove", "uninstall",
 ]
 
+# Word-boundary regex — prevents substring collisions like "lock" in "block"
+# or "rm" in "performance". Always use this instead of bare `in` checks.
+HIGH_IMPACT_VERBS_PATTERN = re.compile(
+    r'\b(' + '|'.join(HIGH_IMPACT_VERBS) + r')\b',
+    re.IGNORECASE,
+)
+
 # ---------------------------------------------------------------------------
 # Allowlist keywords — signals that reduce risk (preview, dry-run, etc.).
 # ---------------------------------------------------------------------------
@@ -92,7 +99,22 @@ MORAL_BLOCK_PATTERNS = re.compile(
     r"(steal|fraud|blackmail|extort|coerce|"
     r"impersonate|forge|counterfeit|phish|"
     r"exploit\s+vuln|hack\s+into|breach\s+security|"
-    r"harm\s+\w+|threaten|deceive\s+\w+|manipulate\s+\w+)",
+    r"harm\s+\w+|threaten|deceive\s+\w+|manipulate\s+\w+|"
+    r"pretend\s+to\s+be\s+(a\s+)?human|"
+    r"as\s+if\s+i\s+am\b|as\s+if\s+you\s+are\b|"
+    r"pose\s+as|masquerade\s+as|"
+    r"the\s+human\s+owner|acting\s+as\s+the\s+human)",
+    re.IGNORECASE,
+)
+
+# Regex patterns specifically for Article XI identity checks (non-contiguous patterns)
+IDENTITY_VIOLATION_PATTERNS = re.compile(
+    r"(pretend\s+to\s+be\s+(a\s+)?human|"
+    r"as\s+if\s+i\s+am\b|as\s+if\s+you\s+are\b|"
+    r"\bimpersonate\b|claim\s+to\s+be|"
+    r"pose\s+as|masquerade\s+as|"
+    r"the\s+human\s+owner|acting\s+as\s+the\s+human|"
+    r"respond.*as.*human|present.*as.*human)",
     re.IGNORECASE,
 )
 
