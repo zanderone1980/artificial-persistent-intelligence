@@ -134,7 +134,93 @@
       </div>
     </section>
 
-    <footer class="fade">CORD · API</footer>
+    <section class="section fade">
+      <h2>CORD v2 — The 9-Step Pipeline</h2>
+      <p class="meta" style="margin-bottom:18px;">Every proposed action passes through nine validation stages before execution is permitted.</p>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="card"><h3>1. Normalize</h3><p class="meta">Sanitize and classify the action type.</p></div>
+        <div class="card"><h3>2. Authenticate</h3><p class="meta">Verify intent lock and session identity.</p></div>
+        <div class="card"><h3>3. Scope Check</h3><p class="meta">Paths, network, and commands within bounds.</p></div>
+        <div class="card"><h3>4. Intent Match</h3><p class="meta">Semantic alignment with declared purpose.</p></div>
+        <div class="card"><h3>5. Constitutional</h3><p class="meta">Evaluate against all 11 SENTINEL articles.</p></div>
+        <div class="card"><h3>6. Risk Score</h3><p class="meta">Weighted composite with anomaly amplification.</p></div>
+        <div class="card"><h3>7. Decision</h3><p class="meta">ALLOW / CONTAIN / CHALLENGE / BLOCK.</p></div>
+        <div class="card"><h3>8. Audit</h3><p class="meta">Hash-chained append-only log entry.</p></div>
+        <div class="card"><h3>9. Verdict</h3><p class="meta">Structured result with reasoning and alternatives.</p></div>
+      </div>
+    </section>
+
+    <section class="section fade">
+      <h2>Decision Outcomes</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div class="card" style="border-color: #22c55e;">
+          <h3 style="color: #22c55e;">ALLOW</h3>
+          <p class="meta">Score &lt; 3.0 — action is within constitutional bounds. Executes immediately.</p>
+        </div>
+        <div class="card" style="border-color: #eab308;">
+          <h3 style="color: #eab308;">CONTAIN</h3>
+          <p class="meta">Score 3.0–4.99 — action is allowed but monitored with restrictions.</p>
+        </div>
+        <div class="card" style="border-color: var(--wolf);">
+          <h3 style="color: var(--wolf);">CHALLENGE</h3>
+          <p class="meta">Score 5.0–6.99 — requires explicit Principal confirmation before execution.</p>
+        </div>
+        <div class="card" style="border-color: var(--accent);">
+          <h3 style="color: var(--accent);">BLOCK</h3>
+          <p class="meta">Score &ge; 7.0 or hard violation — action is prohibited. Not executed.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section fade">
+      <h2>Constitutional Coverage</h2>
+      <p class="meta" style="margin-bottom:14px;">CORD evaluates every action against all 11 articles of the SENTINEL Constitution.</p>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));">
+        <div class="card">
+          <h3>Art I — Prime Directive</h3>
+          <p class="meta">Long-term alignment. Short-term bias detection.</p>
+        </div>
+        <div class="card" style="border-color: var(--accent);">
+          <h3>Art II — Moral Constraints</h3>
+          <p class="meta">Hard block. Fraud, harm, coercion, deception.</p>
+        </div>
+        <div class="card">
+          <h3>Art III — Truth</h3>
+          <p class="meta">Fabrication detection. Manufactured certainty.</p>
+        </div>
+        <div class="card">
+          <h3>Art IV — Proactive Reasoning</h3>
+          <p class="meta">Consequence analysis. Second-order effects.</p>
+        </div>
+        <div class="card">
+          <h3>Art VII — Security</h3>
+          <p class="meta">Injection, exfil, privilege escalation, secrets.</p>
+        </div>
+        <div class="card" style="border-color: var(--accent);">
+          <h3>Art VIII — Immutable Core</h3>
+          <p class="meta">Constitutional drift detection. Hard block.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section fade">
+      <h2>CLI Usage</h2>
+      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);padding:1.5rem;border-radius:12px;">
+        <p class="meta" style="margin:0;line-height:2;">
+          <strong style="color:var(--white);">Route commands through CORD:</strong><br>
+          <span style="color:#999;">./api git push origin main</span><br>
+          <span style="color:#999;">./api rm -rf ~/Downloads/junk</span><br>
+          <span style="color:#999;">./api pip install requests</span><br><br>
+          <strong style="color:var(--white);">Manage sessions:</strong><br>
+          <span style="color:#999;">./api --lock&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# Set intent lock</span><br>
+          <span style="color:#999;">./api --status&nbsp;&nbsp;&nbsp;&nbsp;# View lock status</span><br>
+          <span style="color:#999;">./api --log&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;# View audit log</span><br>
+          <span style="color:#999;">./api --verify&nbsp;&nbsp;&nbsp;&nbsp;# Verify chain integrity</span>
+        </p>
+      </div>
+    </section>
+
+    <footer class="fade">CORD v2 · API</footer>
   </main>
 
   <script>

@@ -1,0 +1,19 @@
+#!/usr/bin/env python3
+"""CORD command mediator — route commands through SENTINEL's CORD engine.
+
+Usage:
+    api git push origin main
+    api rm -rf ~/Downloads/junk
+    api --lock
+    api --status
+    api --log
+    api --verify
+"""
+import sys
+import os
+
+# Ensure cord_engine is importable
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from cord_engine.cli import main
+main()
