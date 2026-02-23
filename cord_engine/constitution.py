@@ -15,6 +15,10 @@ from .policies import (
     MORAL_BLOCK_PATTERNS,
     FINANCIAL_RISK_PATTERNS,
     IDENTITY_VIOLATION_PATTERNS,
+    PROMPT_INJECTION_PATTERNS,
+    PII_PATTERNS,
+    PII_FIELD_NAMES,
+    TOOL_RISK_TIERS,
 )
 
 
@@ -388,6 +392,142 @@ def check_identity(proposal: Proposal) -> CheckResult:
     )
 
 
+# ── Prompt Injection Detection (Article VII extension) ───────────────────────
+
+def check_prompt_injection(proposal: "Proposal") -> CheckResult:
+    """Detect prompt injection attempts in proposal text or raw external input.
+
+    Prompt injection = hostile instructions hidden inside data the AI is
+    asked to process (emails, web pages, tool results, user messages).
+    This is a hijacking attack on the agent's behavior.
+    """
+    score = 0.0
+    reasons: list[str] = []
+
+    # Scan both the proposal description AND any raw external input
+    targets = [proposal.text]
+    if proposal.raw_input:
+        targets.append(proposal.raw_input)
+
+    for target in targets:
+        match = PROMPT_INJECTION_PATTERNS.search(target)
+        if match:
+            score += 4.0
+            reasons.append(
+                f"Prompt injection attempt detected: '{match.group(0)[:60]}' — "
+                "external data is trying to hijack agent behavior"
+            )
+            break  # One hit is enough for hard block
+
+    # Additional signal: external source + instruction-like structure
+    if proposal.source == "external" and not score:
+        # Heuristic: external input with unusual command-like density
+        imperative_verbs = ["ignore", "forget", "disregard", "override", "instead", "now do"]
+        hits = sum(1 for v in imperative_verbs if v in proposal.text.lower())
+        if hits >= 2:
+            score += 1.5
+            reasons.append(
+                "External input contains multiple imperative override signals — "
+                "possible soft injection attempt"
+            )
+
+    hard_block = score >= 4.0
+    return CheckResult(
+        dimension="prompt_injection",
+        article="Article VII — Security & Privacy Doctrine",
+        score=min(score, 5.0),
+        reasons=reasons,
+        hard_block=hard_block,
+    )
+
+
+# ── PII Leakage Detection (Article VII extension) ────────────────────────────
+
+def check_pii_leakage(proposal: "Proposal") -> CheckResult:
+    """Detect PII in outbound communications, file writes, or network calls.
+
+    PII (SSN, credit cards, emails, phone numbers, IP addresses) should not
+    leave the system without explicit consent. Catching it here gives the
+    agent a chance to redact or challenge before it moves.
+    """
+    score = 0.0
+    reasons: list[str] = []
+    found: list[str] = []
+
+    # Combine all text to scan
+    scan_target = " ".join(filter(None, [proposal.text, proposal.raw_input]))
+
+    # Check each PII type
+    for pii_type, pattern in PII_PATTERNS.items():
+        if pattern.search(scan_target):
+            # Email in outbound contexts is only medium risk — it's often intentional
+            weight = 1.0 if pii_type == "email" else 2.0
+            score += weight
+            found.append(pii_type)
+
+    # Check for PII field names in payloads (schema/key exposure)
+    if PII_FIELD_NAMES.search(scan_target):
+        score += 1.5
+        found.append("pii_field_names")
+        reasons.append("PII field names detected in payload — data schema exposure risk")
+
+    if found:
+        pii_list = ", ".join(f for f in found if f != "pii_field_names")
+        if pii_list:
+            reasons.append(
+                f"PII detected in proposal: {pii_list} — "
+                "verify consent before transmitting"
+            )
+
+    # Amplify if this is an outbound action (network, communication, file write)
+    outbound = proposal.action_type in ("network", "communication", "file_op")
+    if score > 0 and outbound:
+        score *= 1.5
+        reasons.append(
+            "PII detected in outbound action — transmission without redaction is a privacy violation"
+        )
+
+    return CheckResult(
+        dimension="pii_leakage",
+        article="Article VII — Security & Privacy Doctrine",
+        score=min(score, 5.0),
+        reasons=reasons,
+    )
+
+
+# ── Tool Risk Baseline (Article IX extension) ────────────────────────────────
+
+def check_tool_risk(proposal: "Proposal") -> CheckResult:
+    """Apply baseline risk score based on which OpenClaw tool is being called.
+
+    Different tools have fundamentally different risk surfaces.
+    exec > browser > network > message > write > edit > read.
+    """
+    score = 0.0
+    reasons: list[str] = []
+
+    if proposal.tool_name:
+        tier_score = TOOL_RISK_TIERS.get(proposal.tool_name.lower(), 0.5)
+        if tier_score > 0:
+            score = tier_score
+            reasons.append(
+                f"Tool '{proposal.tool_name}' has elevated baseline risk "
+                f"(tier score: {tier_score})"
+            )
+
+        # Amplify for exec with shell grants
+        if proposal.tool_name.lower() == "exec" and "shell" in proposal.grants:
+            score += 1.0
+            reasons.append("exec + shell grant — highest risk combination")
+
+    return CheckResult(
+        dimension="tool_risk",
+        article="Article IX — Command Evaluation Framework",
+        score=min(score, 4.0),
+        reasons=reasons,
+    )
+
+
 # ── All checks registry ─────────────────────────────────────────────────────
 
 ALL_CHECKS = [
@@ -402,6 +542,10 @@ ALL_CHECKS = [
     check_evaluation_framework,
     check_temperament,
     check_identity,
+    # v2.1 additions
+    check_prompt_injection,
+    check_pii_leakage,
+    check_tool_risk,
 ]
 
 

@@ -222,6 +222,23 @@ def evaluate(
     # ── Step 4: Intent Match ──
     intent_result = _intent_match(proposal, lock)
 
+    # ── Step 4.5: Rate Limit Check ──
+    from .audit_log import check_rate_limit
+    rate_exceeded, rate_count, rate_per_min = check_rate_limit(log_path=log_path)
+    rate_result: CheckResult | None = None
+    if rate_per_min > 10 or rate_exceeded:
+        rate_score = min(3.0 + (rate_per_min / 10), 5.0) if rate_per_min > 10 else 3.0
+        rate_result = CheckResult(
+            dimension="rate_anomaly",
+            article="Article VII — Security & Privacy Doctrine",
+            score=rate_score,
+            reasons=[
+                f"Rate anomaly: {rate_count} proposals in last 60s "
+                f"({rate_per_min}/min) — possible abuse loop or runaway agent"
+            ],
+            hard_block=rate_exceeded and rate_per_min > 60,
+        )
+
     # ── Step 5: Constitutional Check ──
     constitutional_results = run_all_checks(proposal)
 
@@ -233,6 +250,8 @@ def evaluate(
         all_results.append(scope_result)
     if intent_result:
         all_results.append(intent_result)
+    if rate_result:
+        all_results.append(rate_result)
 
     # ── Step 6: Risk Score ──
     base_score = compute_composite_score(all_results)

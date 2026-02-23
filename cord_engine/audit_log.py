@@ -9,7 +9,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-DEFAULT_LOG_PATH = Path(__file__).parent / "cord.log.jsonl"
+DEFAULT_LOG_PATH = Path(
+    os.environ.get("CORD_LOG_PATH", str(Path(__file__).parent / "cord.log.jsonl"))
+)
 
 
 def _hash(payload: str) -> str:
@@ -89,3 +91,49 @@ def read_log(log_path: Path = DEFAULT_LOG_PATH) -> list[dict]:
         except json.JSONDecodeError:
             continue
     return entries
+
+
+def check_rate_limit(
+    window_seconds: int = 60,
+    max_count: int = 20,
+    log_path: Path = DEFAULT_LOG_PATH,
+) -> tuple[bool, int, float]:
+    """Check if proposal rate exceeds the allowed threshold.
+
+    Returns:
+        (exceeded: bool, count_in_window: int, rate_per_minute: float)
+
+    A burst of proposals in a short window is a signal of:
+    - Automated abuse / jailbreak loops
+    - Gradual escalation attacks
+    - Runaway agent behavior
+    """
+    from datetime import datetime, timezone, timedelta
+
+    if not log_path.exists():
+        return False, 0, 0.0
+
+    entries = read_log(log_path)
+    if not entries:
+        return False, 0, 0.0
+
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(seconds=window_seconds)
+
+    recent = []
+    for entry in entries:
+        ts_str = entry.get("timestamp", "")
+        try:
+            ts = datetime.fromisoformat(ts_str)
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            if ts >= cutoff:
+                recent.append(entry)
+        except (ValueError, TypeError):
+            continue
+
+    count = len(recent)
+    rate = (count / window_seconds) * 60  # normalize to per-minute
+
+    exceeded = count >= max_count
+    return exceeded, count, round(rate, 1)

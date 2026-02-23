@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "cord-engine"
+version = "2.1.0"
+description = "CORD — Counter-Operations & Risk Detection. Constitutional AI enforcement engine for SENTINEL."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["ai", "safety", "governance", "sentinel", "cord", "constitutional-ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov"]
+
+[project.scripts]
+cord = "cord_engine.cli:main"
+
+[project.urls]
+Homepage = "https://zanderone1980.github.io/artificial-persistent-intelligence/"
+Repository = "https://github.com/zanderone1980/artificial-persistent-intelligence"
+Documentation = "https://zanderone1980.github.io/artificial-persistent-intelligence/architecture.html"
+
+[tool.setuptools.packages.find]
+include = ["cord_engine*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

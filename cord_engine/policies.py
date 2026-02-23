@@ -26,6 +26,11 @@ WEIGHTS = {
     "irreversibility": 4,
     "intent_drift": 3,
     "anomaly": 2,
+    # New dimensions (v2.1)
+    "prompt_injection": 5,   # Highest — AI hijack attempt
+    "pii_leakage": 4,        # PII exposure risk
+    "rate_anomaly": 3,       # Frequency-based anomaly
+    "tool_risk": 1,          # Tool-tier baseline signal (additive, not primary)
 }
 
 # ---------------------------------------------------------------------------
@@ -128,6 +133,76 @@ FINANCIAL_RISK_PATTERNS = re.compile(
     r"borrow|loan|credit\s+card|overdraft)",
     re.IGNORECASE,
 )
+
+# ---------------------------------------------------------------------------
+# Prompt injection patterns — malicious instructions hidden in external data.
+# These attempt to hijack the AI's behavior via untrusted input sources.
+# ---------------------------------------------------------------------------
+PROMPT_INJECTION_PATTERNS = re.compile(
+    r"("
+    # Classic override attempts
+    r"ignore (previous|all|prior|above) instructions?|"
+    r"disregard (your|the|all) (instructions?|rules?|guidelines?|constraints?)|"
+    r"forget (everything|your instructions?|what you were told)|"
+    r"new instructions?:|override:|system override|"
+    # Role jacking
+    r"you are now|from now on you (are|will|must)|act as (a|an|if you are)|"
+    r"your new (role|purpose|mission|goal|task) is|"
+    r"pretend (you have no|you don't have|there are no) (rules?|constraints?|limits?)|"
+    r"jailbreak|DAN mode|developer mode|god mode|unrestricted mode|"
+    # Instruction injection via data
+    r"<\|.*?\|>|<system>|</system>|<\|im_start\||<\|im_end\||"
+    r"\[INST\]|\[/INST\]|\[SYSTEM\]|###\s*system|###\s*instruction|"
+    # Hidden instruction tricks
+    r"the (following|above) (text|content|data) (is|contains) (your|new) instructions?|"
+    r"translate (this|the following) (and|then) (also|additionally) (do|execute|run)|"
+    r"after (reading|processing|translating|summarizing).*?(do|execute|send|call)"
+    r")",
+    re.IGNORECASE | re.DOTALL,
+)
+
+# ---------------------------------------------------------------------------
+# PII patterns — personally identifiable information that shouldn't be
+# transmitted, stored, or processed without explicit consent.
+# ---------------------------------------------------------------------------
+PII_PATTERNS = {
+    "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b|\b\d{9}\b"),
+    "credit_card": re.compile(
+        r"\b(?:4[0-9]{12}(?:[0-9]{3})?|"           # Visa
+        r"5[1-5][0-9]{14}|"                          # Mastercard
+        r"3[47][0-9]{13}|"                           # Amex
+        r"3(?:0[0-5]|[68][0-9])[0-9]{11}|"          # Diners
+        r"6(?:011|5[0-9]{2})[0-9]{12})\b"           # Discover
+    ),
+    "email": re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"),
+    "phone": re.compile(r"\b(\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"),
+    "ip_address": re.compile(
+        r"\b(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\b"
+    ),
+}
+
+# PII field names that appear in data payloads (keys, column names, etc.)
+PII_FIELD_NAMES = re.compile(
+    r"\b(social_security|ssn|credit_card|card_number|cvv|"
+    r"date_of_birth|dob|passport|drivers_license|"
+    r"medical_record|health_record|diagnosis|prescription|"
+    r"bank_account|routing_number|tax_id|ein|itin)\b",
+    re.IGNORECASE,
+)
+
+# ---------------------------------------------------------------------------
+# Tool risk tiers — different tools carry different baseline risk.
+# ---------------------------------------------------------------------------
+TOOL_RISK_TIERS = {
+    "exec":    3.0,   # Shell execution — highest risk
+    "write":   1.5,   # File write — moderate
+    "edit":    1.0,   # File edit — low
+    "browser": 2.0,   # Browser automation — elevated (can exfil, fill forms)
+    "network": 2.5,   # Outbound network — elevated
+    "read":    0.0,   # Read-only — no additional risk
+    "query":   0.0,   # Query — no additional risk
+    "message": 1.5,   # Messaging — moderate (external communication)
+}
 
 # ---------------------------------------------------------------------------
 # Action type classification hints.

@@ -10,7 +10,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-DEFAULT_LOCK_PATH = Path(__file__).parent / "intent.lock.json"
+import os as _os
+DEFAULT_LOCK_PATH = Path(
+    _os.environ.get("CORD_LOCK_PATH", str(Path(__file__).parent / "intent.lock.json"))
+)
 
 
 def _sha(text: str) -> str:

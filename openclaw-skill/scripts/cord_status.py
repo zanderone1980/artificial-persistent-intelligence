@@ -3,12 +3,23 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
-# Point to the actual cord_engine location
-CORD_ROOT = Path.home() / "ClaudeWork" / "artificial-persistent-intelligence"
-sys.path.insert(0, str(CORD_ROOT))
+# Resolution order:
+# 1. CORD_ENGINE_PATH env var (user-configured)
+# 2. pip-installed cord_engine (importable directly)
+# 3. Local dev path at ~/ClaudeWork/artificial-persistent-intelligence
+_env_path = os.environ.get("CORD_ENGINE_PATH")
+if _env_path:
+    sys.path.insert(0, _env_path)
+else:
+    try:
+        import cord_engine  # noqa: F401 — already installed via pip
+    except ImportError:
+        _local = Path.home() / "ClaudeWork" / "artificial-persistent-intelligence"
+        sys.path.insert(0, str(_local))
 
 from cord_engine.intent_lock import load_intent_lock, DEFAULT_LOCK_PATH
 from cord_engine.audit_log import verify_chain, read_log, DEFAULT_LOG_PATH
