@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "cord-engine"
@@ -8,7 +8,7 @@ version = "2.1.0"
 description = "CORD — Counter-Operations & Risk Detection. Constitutional AI enforcement engine for SENTINEL."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = "MIT"
 keywords = ["ai", "safety", "governance", "sentinel", "cord", "constitutional-ai"]
 classifiers = [
     "Development Status :: 4 - Beta",
