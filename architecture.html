@@ -145,15 +145,41 @@
             and that no action exceeds the granted permission scope.
           </p>
 
-          <h3>What CORD Does</h3>
+          <h3>The 9-Step CORD v2 Pipeline</h3>
+          <pre><code>NORMALIZE → AUTHENTICATE → SCOPE CHECK → INTENT MATCH → CONSTITUTIONAL CHECK → RISK SCORE → DECISION → AUDIT → VERDICT</code></pre>
           <ul>
-            <li>Detects prompt injection attempts</li>
-            <li>Prevents data exfiltration</li>
-            <li>Enforces explicit permission boundaries</li>
-            <li>Monitors deviation from declared intent</li>
-            <li>Blocks irreversible or destructive operations without confirmation</li>
-            <li>Records every decision in a tamper-evident audit log</li>
+            <li><strong>Normalize:</strong> sanitize input, classify action type</li>
+            <li><strong>Authenticate:</strong> verify intent lock exists and is valid</li>
+            <li><strong>Scope Check:</strong> paths, network targets, commands within bounds</li>
+            <li><strong>Intent Match:</strong> semantic alignment with declared purpose</li>
+            <li><strong>Constitutional Check:</strong> evaluate against all 11 SENTINEL articles</li>
+            <li><strong>Risk Score:</strong> weighted composite with anomaly amplification</li>
+            <li><strong>Decision:</strong> ALLOW / CONTAIN / CHALLENGE / BLOCK</li>
+            <li><strong>Audit:</strong> hash-chained append-only log entry</li>
+            <li><strong>Verdict:</strong> structured result with reasoning + alternatives</li>
           </ul>
+
+          <h3>What CORD Detects</h3>
+          <ul>
+            <li>Prompt injection attempts (regex pattern matching)</li>
+            <li>Data exfiltration (outbound data transfer detection)</li>
+            <li>Secrets exposure (API keys, tokens, credentials, .env files)</li>
+            <li>Privilege escalation (high-impact verbs + elevated grants)</li>
+            <li>Irreversible operations (destructive actions without safety indicators)</li>
+            <li>Moral violations (fraud, coercion, deception — instant BLOCK)</li>
+            <li>Constitutional drift (attempts to override Articles I–III — instant BLOCK)</li>
+            <li>Financial risk (impulsive spending, missing ROI evaluation)</li>
+            <li>Truth fabrication (manufactured data, fake results)</li>
+            <li>Intent drift (proposal misaligned with declared session purpose)</li>
+          </ul>
+
+          <h3>Decision Thresholds</h3>
+          <pre><code>Score &lt; 3.0   → ALLOW     (execute immediately)
+Score 3.0–4.99 → CONTAIN   (execute with monitoring)
+Score 5.0–6.99 → CHALLENGE (requires Principal confirmation)
+Score ≥ 7.0    → BLOCK     (prohibited, not executed)
+
+Hard blocks: Articles II, VII, VIII bypass scoring entirely.</code></pre>
 
           <h3>Offline-First Enforcement</h3>
           <p>
@@ -166,15 +192,20 @@
           <h3>Intent Lock</h3>
           <p>
             API requires an authenticated intent boundary.
-            Until intent is explicitly set and verified, API operates in read-only mode.
+            Until intent is explicitly set and verified, API operates in read-only restricted mode.
             Actions outside that declared scope require escalation or are blocked entirely.
+            The intent lock binds: user ID, SHA-256 hashed passphrase, declared intent, and scope (allowed paths, commands, network targets).
           </p>
 
           <h3>Audit as Authority</h3>
           <p>
             Every action, every validation decision, and every block is written to an append-only log.
-            Each entry is cryptographically chained to the previous entry.
-            Tampering becomes detectable.
+            Each entry is cryptographically chained to the previous entry via SHA-256:
+          </p>
+          <pre><code>entry_hash = SHA256(prev_hash + JSON(entry))
+First entry: prev_hash = "GENESIS"</code></pre>
+          <p>
+            Tampering becomes detectable. Chain integrity can be verified at any time.
             Transparency is not optional.
           </p>
 
@@ -435,14 +466,36 @@ User → Local Core → Integrity Gate → (Optional) External Acceleration → 
       </div>
 
       <div class="section" style="margin: 0;">
-        <h3>Algorithm 2 — Core/CORD Protector Loop (counter-AI intelligence)</h3>
-        <p class="meta">Normalize → Authenticate → Scope Check → Intent Match → Risk Score → Decision → Instrument → Audit → Watch</p>
-        <p class="meta">Decision outcomes: ALLOW / CHALLENGE / CONTAIN / BLOCK</p>
+        <h3>Algorithm 2 — Core/CORD v2 Protector Loop (counter-AI intelligence)</h3>
+        <p class="meta">Normalize → Authenticate → Scope Check → Intent Match → Constitutional Check → Risk Score → Decision → Audit → Verdict</p>
+        <p class="meta">Decision outcomes: ALLOW / CONTAIN / CHALLENGE / BLOCK</p>
         <ul class="list">
+          <li>Constitutional Check evaluates all 11 SENTINEL articles per proposal</li>
+          <li>Weighted scoring with anomaly amplification across dimensions</li>
+          <li>Hard blocks on moral violations (Art II), security threats (Art VII), drift attempts (Art VIII)</li>
           <li>No outbound network without explicit allowlist</li>
           <li>No credential/keychain access without explicit approval</li>
           <li>No destructive/irreversible ops without confirmation + preview</li>
-          <li>Intent mismatch = BLOCK</li>
+          <li>Intent mismatch = CHALLENGE or BLOCK</li>
+          <li>Every decision hash-chained to append-only audit log</li>
+        </ul>
+      </div>
+
+      <div class="section" style="margin: 18px 0 0;">
+        <h3>CORD v2 Constitutional Dimensions</h3>
+        <p class="meta">Each SENTINEL article maps to a CORD evaluation dimension with configurable weights:</p>
+        <ul class="list">
+          <li><strong>long_term_alignment</strong> (w:3) — Art I: short-term bias detection</li>
+          <li><strong>moral_check</strong> (w:5) — Art II: hard block on fraud, harm, coercion</li>
+          <li><strong>truth_check</strong> (w:2) — Art III: fabrication and manufactured certainty</li>
+          <li><strong>consequence_analysis</strong> (w:3) — Art IV: second-order effects</li>
+          <li><strong>sustainability_check</strong> (w:2) — Art V: capacity and burnout limits</li>
+          <li><strong>financial_risk</strong> (w:3) — Art VI: ROI, solvency, impulse detection</li>
+          <li><strong>security_check</strong> (w:4) — Art VII: injection, exfil, privilege, secrets</li>
+          <li><strong>drift_check</strong> (w:2) — Art VIII: immutable core protection</li>
+          <li><strong>evaluation_framework</strong> (w:3) — Art IX: six-question gate</li>
+          <li><strong>temperament_check</strong> (w:1) — Art X: escalation detection</li>
+          <li><strong>identity_check</strong> (w:1) — Art XI: role integrity</li>
         </ul>
       </div>
     </section>
