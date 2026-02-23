@@ -19,6 +19,9 @@ verdict = evaluate(proposal, repo_root=None, lock_path=None, log_path=None)
 | `grants` | list[str] | No | Permissions: `shell`, `network`, `write:file`, `read:secrets`, etc. |
 | `session_intent` | str | No | Declared purpose for this session |
 | `context` | dict | No | Additional metadata (see below) |
+| `tool_name` | str | No | OpenClaw tool being called: `exec`, `write`, `browser`, `read`, `message`, `network` |
+| `source` | str | No | Input origin: `agent` (default), `external`, `user`, `tool_result` |
+| `raw_input` | str | No | Untrusted external input to scan for prompt injection |
 
 ## Context Keys
 
