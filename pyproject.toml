@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cord-engine"
-version = "2.1.0"
+version = "2.2.0"
 description = "CORD — Counter-Operations & Risk Detection. Constitutional AI governance engine for autonomous agents."
 readme = "README.md"
 requires-python = ">=3.9"
