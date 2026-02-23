@@ -1,0 +1,25 @@
+# Runtime state — never commit these
+cord_engine/cord.log.jsonl
+cord_engine/intent.lock.json
+*.log.jsonl
+*.lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS
+.DS_Store

@@ -248,6 +248,45 @@ class TestConstitutionalChecks:
         r = check_identity(Proposal(text="Introduce myself as SENTINEL"))
         assert r.score == 0.0
 
+    # ── Regression tests for bug fixes ──
+
+    def test_identity_pretend_with_article(self):
+        """Bug fix: 'Pretend to be a human' was missed due to the article 'a'."""
+        r = check_identity(Proposal(text="Pretend to be a human to a client"))
+        assert r.score > 0
+        assert any("identity" in reason.lower() for reason in r.reasons)
+
+    def test_consequence_no_false_positive_block_verb(self):
+        """Bug fix: 'Block' (schedule) must not trigger 'lock' in HIGH_IMPACT_VERBS."""
+        r = check_consequence_analysis(Proposal(text="Block 1 hour recovery time on calendar"))
+        assert r.score == 0.0
+
+    def test_security_no_false_positive_block_verb(self):
+        """Bug fix: 'Block' (schedule) must not trigger via substring 'lock' match."""
+        r = check_security(Proposal(text="Block 1 hour recovery time on calendar"))
+        assert r.score == 0.0
+        assert r.hard_block is False
+
+    def test_financial_with_roi_no_penalty(self):
+        """Bug fix: ROI-evaluated purchase should not trigger missing-ROI penalty."""
+        r = check_financial_risk(Proposal(
+            text="Purchase design tool subscription",
+            context={"financial_amount": 200, "roi_evaluated": True},
+        ))
+        assert r.score == 0.0
+
+    def test_evaluation_framework_roi_counts_as_assessment(self):
+        """Bug fix: roi_evaluated should satisfy Article IX risk assessment requirements."""
+        r_no_roi = check_evaluation_framework(Proposal(
+            text="Acquire new design software",
+            context={"financial_amount": 200},
+        ))
+        r_with_roi = check_evaluation_framework(Proposal(
+            text="Acquire new design software",
+            context={"financial_amount": 200, "roi_evaluated": True},
+        ))
+        assert r_with_roi.score < r_no_roi.score
+
     # ── All checks combined ──
     def test_run_all_checks_returns_11(self):
         results = run_all_checks(Proposal(text="test"))
@@ -511,6 +550,36 @@ class TestPipeline:
         assert len(entries) == 2
         valid, count = verify_chain(log_path)
         assert valid is True
+
+    # ── Pipeline regression tests for bug fixes ──
+
+    def test_block_verb_scheduling_allow(self, intent_lock, lock_path, log_path, repo_root):
+        """Bug fix: 'Block time on calendar' must not be treated as dangerous."""
+        p = Proposal(
+            text="Block 1 hour recovery time on calendar",
+            session_intent="Update API static site and publish to GitHub Pages",
+        )
+        v = evaluate(p, repo_root=repo_root, lock_path=lock_path, log_path=log_path)
+        assert v.decision == Decision.ALLOW
+
+    def test_pretend_human_blocked(self, intent_lock, lock_path, log_path, repo_root):
+        """Bug fix: 'Pretend to be a human to a client' must trigger BLOCK."""
+        p = Proposal(
+            text="Pretend to be a human to a client",
+            session_intent="Update API static site and publish to GitHub Pages",
+        )
+        v = evaluate(p, repo_root=repo_root, lock_path=lock_path, log_path=log_path)
+        assert v.decision == Decision.BLOCK
+
+    def test_roi_purchase_not_blocked(self, intent_lock, lock_path, log_path, repo_root):
+        """Bug fix: $200 tool with ROI evaluated should not be blocked."""
+        p = Proposal(
+            text="Purchase design tool subscription",
+            session_intent="Update API static site and publish to GitHub Pages",
+            context={"financial_amount": 200, "roi_evaluated": True},
+        )
+        v = evaluate(p, repo_root=repo_root, lock_path=lock_path, log_path=log_path)
+        assert v.decision in (Decision.ALLOW, Decision.CONTAIN)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
