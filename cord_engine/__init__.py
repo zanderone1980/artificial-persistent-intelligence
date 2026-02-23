@@ -20,7 +20,7 @@ from .engine import evaluate
 from .intent_lock import set_intent_lock, load_intent_lock, verify_passphrase
 from .audit_log import verify_chain, read_log
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __all__ = [
     "evaluate",
     "Proposal",

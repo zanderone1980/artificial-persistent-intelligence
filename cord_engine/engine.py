@@ -223,11 +223,15 @@ def evaluate(
     intent_result = _intent_match(proposal, lock)
 
     # ── Step 4.5: Rate Limit Check ──
+    # Thresholds are intentionally generous — legitimate active sessions run 10-20/min.
+    # Flag at >30/min (unusual), hard block at >60/min (runaway loop / abuse).
     from .audit_log import check_rate_limit
-    rate_exceeded, rate_count, rate_per_min = check_rate_limit(log_path=log_path)
+    rate_exceeded, rate_count, rate_per_min = check_rate_limit(
+        window_seconds=60, max_count=40, log_path=log_path
+    )
     rate_result: CheckResult | None = None
-    if rate_per_min > 10 or rate_exceeded:
-        rate_score = min(3.0 + (rate_per_min / 10), 5.0) if rate_per_min > 10 else 3.0
+    if rate_per_min > 30 or rate_exceeded:
+        rate_score = min(2.0 + (rate_per_min / 30), 5.0) if rate_per_min > 30 else 2.0
         rate_result = CheckResult(
             dimension="rate_anomaly",
             article="Article VII — Security & Privacy Doctrine",
