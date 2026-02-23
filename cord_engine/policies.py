@@ -140,23 +140,27 @@ FINANCIAL_RISK_PATTERNS = re.compile(
 # ---------------------------------------------------------------------------
 PROMPT_INJECTION_PATTERNS = re.compile(
     r"("
-    # Classic override attempts
-    r"ignore (previous|all|prior|above) instructions?|"
-    r"disregard (your|the|all) (instructions?|rules?|guidelines?|constraints?)|"
-    r"forget (everything|your instructions?|what you were told)|"
-    r"new instructions?:|override:|system override|"
+    # Classic override attempts — \s* handles word-splitting attack ("i g n o r e")
+    # (?:\w+\s+){0,3} allows up to 3 filler words between "ignore" and "instructions"
+    r"ignore\s*(?:\w+\s+){0,3}instructions?|"
+    r"disregard\s*(?:\w+\s+){0,3}(instructions?|rules?|guidelines?|constraints?)|"
+    r"forget\s*(everything|your\s*instructions?|what\s*you\s*were\s*told)|"
+    r"new\s*instructions?\s*:|override\s*:|system\s*override|"
     # Role jacking
-    r"you are now|from now on you (are|will|must)|act as (a|an|if you are)|"
-    r"your new (role|purpose|mission|goal|task) is|"
-    r"pretend (you have no|you don't have|there are no) (rules?|constraints?|limits?)|"
-    r"jailbreak|DAN mode|developer mode|god mode|unrestricted mode|"
-    # Instruction injection via data
+    r"you\s*are\s*now|from\s*now\s*on\s*you\s*(are|will|must)|act\s*as\s*(a|an|if\s*you\s*are)|"
+    r"your\s*new\s*(role|purpose|mission|goal|task)\s*is|"
+    r"pretend\s*(you\s*have\s*no|you\s*don.t\s*have|there\s*are\s*no)\s*(rules?|constraints?|limits?)|"
+    r"jailbreak|DAN\s*mode|developer\s*mode|god\s*mode|unrestricted\s*mode|"
+    # Instruction injection via data — template delimiters
     r"<\|.*?\|>|<system>|</system>|<\|im_start\||<\|im_end\||"
     r"\[INST\]|\[/INST\]|\[SYSTEM\]|###\s*system|###\s*instruction|"
+    # Collapsed word-split forms (e.g. "ignorepreviousinstructions")
+    r"ignoreprevious\w*instruct|disregardall\w*|forgetinstruct\w*|"
+    r"youarenow\w*|fromnowon\w*|"
     # Hidden instruction tricks
-    r"the (following|above) (text|content|data) (is|contains) (your|new) instructions?|"
-    r"translate (this|the following) (and|then) (also|additionally) (do|execute|run)|"
-    r"after (reading|processing|translating|summarizing).*?(do|execute|send|call)"
+    r"the\s*(following|above)\s*(text|content|data)\s*(is|contains)\s*(your|new)\s*instructions?|"
+    r"translate\s*(this|the\s*following)\s*(and|then)\s*(also|additionally)\s*(do|execute|run)|"
+    r"after\s*(reading|processing|translating|summarizing).*?(do|execute|send|call)"
     r")",
     re.IGNORECASE | re.DOTALL,
 )

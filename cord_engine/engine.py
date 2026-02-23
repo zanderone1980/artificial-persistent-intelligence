@@ -212,6 +212,13 @@ def evaluate(
     # ── Step 1: Normalize ──
     proposal = _normalize(proposal)
 
+    # Anti-obfuscation: normalize text to canonical form before any checks
+    # Handles: Unicode homoglyphs, leetspeak, word-splitting, base64, HTML entities
+    from .normalizer import normalize_proposal_text
+    proposal.text, proposal.raw_input = normalize_proposal_text(
+        proposal.text, proposal.raw_input
+    )
+
     # ── Step 2: Authenticate ──
     lock = load_intent_lock(lock_path)
     auth_result = _authenticate(lock)

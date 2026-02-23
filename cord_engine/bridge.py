@@ -47,6 +47,9 @@ def main() -> None:
             grants=data.get("grants", []),
             session_intent=data.get("session_intent", ""),
             context=data.get("context", {}),
+            tool_name=data.get("tool_name", ""),
+            source=data.get("source", "agent"),
+            raw_input=data.get("raw_input", ""),
         )
 
         # Allow overriding paths via env or input
