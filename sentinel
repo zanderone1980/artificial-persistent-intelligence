@@ -2,12 +2,12 @@
 """CORD command mediator — route commands through SENTINEL's CORD engine.
 
 Usage:
-    api git push origin main
-    api rm -rf ~/Downloads/junk
-    api --lock
-    api --status
-    api --log
-    api --verify
+    cord git push origin main
+    cord rm -rf ~/Downloads/junk
+    cord --lock
+    cord --status
+    cord --log
+    cord --verify
 """
 import sys
 import os

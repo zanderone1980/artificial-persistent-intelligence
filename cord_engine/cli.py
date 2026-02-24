@@ -3,20 +3,20 @@
 
 Instead of running commands directly, route them through CORD:
 
-    api git push origin main
-    api rm -rf ~/Downloads/junk
-    api pip install requests
+    cord git push origin main
+    cord rm -rf ~/Downloads/junk
+    cord pip install requests
 
 CORD evaluates the command against the SENTINEL Constitution,
 then either ALLOWs, CONTAINs, CHALLENGEs, or BLOCKs execution.
 
 Usage:
-    api <command> [args...]
-    api --status          Show current intent lock status
-    api --lock            Set a new intent lock interactively
-    api --log             Show recent audit log entries
-    api --verify          Verify audit chain integrity
-    api --help            Show this help
+    cord <command> [args...]
+    cord --status          Show current intent lock status
+    cord --lock            Set a new intent lock interactively
+    cord --log             Show recent audit log entries
+    cord --verify          Verify audit chain integrity
+    cord --help            Show this help
 """
 
 from __future__ import annotations
@@ -89,7 +89,7 @@ def cmd_status():
     lock = load_intent_lock()
     if lock is None:
         print(f"  {RED}No intent lock set.{RESET}")
-        print(f"  Run {BOLD}api --lock{RESET} to set one.")
+        print(f"  Run {BOLD}cord --lock{RESET} to set one.")
         return
 
     print(f"  {GREEN}Intent lock active{RESET}")
@@ -184,7 +184,7 @@ def cmd_evaluate_and_run(args: list[str]):
 
     if not command_text:
         print(f"  {RED}No command provided.{RESET}")
-        print(f"  Usage: api <command> [args...]")
+        print(f"  Usage: cord <command> [args...]")
         return
 
     _print_banner()

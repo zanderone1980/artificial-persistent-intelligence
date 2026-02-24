@@ -1,6 +1,6 @@
 # SENTINEL
 
-## Constitution of the Artificial Persistent Intelligence (SENTINEL)
+## Constitution of SENTINEL
 
 **Authored by Alex — ZanderPink Design LLC**
 **Version 2.0 — 2026**
