@@ -86,8 +86,41 @@ function extractCodeBlocks(text) {
 }
 
 /**
+ * Pick the best code block from a brief for a given file path.
+ * Strategy: prefer blocks whose language matches the file extension.
+ * Falls back to the largest block if no language match found.
+ *
+ * @param {Array<{language, code}>} blocks  - Extracted code blocks
+ * @param {string} filePath                 - Target file path
+ * @returns {{language, code}|null}
+ */
+function bestBlockForFile(blocks, filePath) {
+  if (blocks.length === 0) return null;
+
+  const ext = filePath.split(".").pop().toLowerCase();
+  const langMap = {
+    js: ["javascript", "js", "node"],
+    ts: ["typescript", "ts"],
+    py: ["python", "py"],
+    json: ["json"],
+    md: ["markdown", "md"],
+    sh: ["bash", "sh", "shell"],
+    css: ["css"],
+    html: ["html"],
+  };
+  const targetLangs = langMap[ext] || [];
+
+  // First: exact language match
+  const langMatch = blocks.find((b) => targetLangs.includes(b.language.toLowerCase()));
+  if (langMatch) return langMatch;
+
+  // Second: largest block (most likely to be the real implementation)
+  return blocks.reduce((best, b) => (b.code.length > best.code.length ? b : best), blocks[0]);
+}
+
+/**
  * Parse a brief and execute approved file writes.
- * Extracts code blocks and matches them to file paths from task.
+ * Extracts code blocks and matches them to file paths by language/size heuristic.
  *
  * @param {string} brief        - Claude-generated brief (may contain code blocks)
  * @param {object} task         - Task object with filePaths
@@ -98,19 +131,20 @@ function executeBrief(brief, task) {
   const blocks = extractCodeBlocks(brief);
   const results = [];
 
-  if (filePaths.length === 0 && blocks.length === 0) {
+  if (filePaths.length === 0 || blocks.length === 0) {
     console.log(`   ℹ️  No files to write for "${task.id}"`);
     return results;
   }
 
-  // Match code blocks to file paths by index, or use all blocks if no paths
-  blocks.forEach((block, i) => {
-    const filePath = filePaths[i] || null;
-    if (filePath) {
+  for (const filePath of filePaths) {
+    const block = bestBlockForFile(blocks, filePath);
+    if (block) {
       const result = writeFile(filePath, block.code);
       results.push({ filePath, ...result });
+    } else {
+      console.log(`   ⚠️  No matching code block found for ${filePath}`);
     }
-  });
+  }
 
   return results;
 }

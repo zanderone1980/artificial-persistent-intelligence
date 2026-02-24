@@ -92,7 +92,12 @@ function isNetworkAllowed(target = "", scope) {
 function isCommandAllowed(proposal = "", scope) {
   if (!proposal) return true;
   if (!scope?.allowCommands || scope.allowCommands.length === 0) return false;
-  return scope.allowCommands.some((pattern) => pattern.test(proposal));
+  return scope.allowCommands.some((pattern) => {
+    if (pattern instanceof RegExp) return pattern.test(proposal);
+    if (pattern?.__regex) return new RegExp(pattern.__regex, pattern.flags || "").test(proposal);
+    if (typeof pattern === "string") return proposal.includes(pattern);
+    return false;
+  });
 }
 
 function evaluateProposal(input = {}) {

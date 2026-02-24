@@ -23,13 +23,14 @@ function startSession(goal, options = {}) {
   // Declare scope — what LEGION is allowed to touch this session
   const scope = {
     allowPaths: options.allowPaths || [REPO_ROOT],
-    allowCommands: options.allowCommands || [
+    // Store regex as serializable objects so they survive JSON round-trip
+    allowCommands: (options.allowCommands || [
       /^node\s/,
       /^npm\s/,
       /^git\s(add|commit|push|status|log|diff)/,
       /^mkdir\s/,
       /^touch\s/,
-    ],
+    ]).map((r) => (r instanceof RegExp ? { __regex: r.source, flags: r.flags } : r)),
     allowNetworkTargets: options.allowNetworkTargets || [
       "api.anthropic.com",
       "api.openai.com",

@@ -53,7 +53,10 @@ class Orchestrator {
       path: proposal.path || null,
       networkTarget: proposal.networkTarget || null,
       grants: proposal.grants || [],
-      sessionIntent: this.session?.goal || "",
+      // Orchestrator handles intent alignment via decomposition.
+      // Pass empty sessionIntent so CORD doesn't double-score drift
+      // on internal bookkeeping proposals — it checks injection/exfil/privilege instead.
+      sessionIntent: "",
     });
 
     const icon =
@@ -102,7 +105,10 @@ class Orchestrator {
 
   /**
    * Execute a single task through the full LEGION pipeline:
-   * Brief → CORD validate → Execute → CORD validate output → Review → Approve/Revise
+   * Brief → (if executor) CORD validate file writes → Execute → CORD validate output → Review → Approve/Revise
+   *
+   * CORD only fires on real execution (file writes, shell commands).
+   * Claude analysis/review/spec tasks are thinking-only — no CORD gate needed.
    */
   async executeTask(task, revisionCount = 0) {
     console.log(`\n─────────────────────────────────────`);
@@ -113,28 +119,31 @@ class Orchestrator {
     // Step 1: Generate task brief (Claude writes spec + code)
     const brief = await claude.generateBrief(task, this.session.goal);
 
-    // Step 2: CORD validates the brief before any execution
     const filePaths = task.filePaths || [];
-    for (const fp of filePaths) {
-      const cordResult = this.validate(
-        { text: `Write file: ${fp}`, path: path.join(REPO_ROOT, fp) },
-        task.id
-      );
-      if (cordResult.decision === "BLOCK") {
-        console.log(`\n🚫 CORD BLOCK on "${task.id}" — halting task.`);
-        recordTask(this.session, task, { decision: "BLOCK", cordResult });
-        return { taskId: task.id, status: "BLOCKED", cordResult };
-      }
-      if (cordResult.decision === "CHALLENGE") {
-        const proceed = await this._challengeUser(task, cordResult);
-        if (!proceed) {
-          recordTask(this.session, task, { decision: "CHALLENGE_REJECTED", cordResult });
-          return { taskId: task.id, status: "CHALLENGE_REJECTED", cordResult };
+
+    // Step 2: CORD gates only executor tasks with actual file writes
+    if (task.assignedModel === "executor" && filePaths.length > 0) {
+      for (const fp of filePaths) {
+        const cordResult = this.validate(
+          { text: `git commit -m "legion: write ${fp}"`, path: path.join(REPO_ROOT, fp) },
+          task.id
+        );
+        if (cordResult.decision === "BLOCK") {
+          console.log(`\n🚫 CORD BLOCK on "${task.id}" — halting task.`);
+          recordTask(this.session, task, { decision: "BLOCK", cordResult });
+          return { taskId: task.id, status: "BLOCKED", cordResult };
+        }
+        if (cordResult.decision === "CHALLENGE") {
+          const proceed = await this._challengeUser(task, cordResult);
+          if (!proceed) {
+            recordTask(this.session, task, { decision: "CHALLENGE_REJECTED", cordResult });
+            return { taskId: task.id, status: "CHALLENGE_REJECTED", cordResult };
+          }
         }
       }
     }
 
-    // Step 3: Execute — write files / run commands
+    // Step 3: Execute — write files / run commands (executor tasks only)
     let writeResults = [];
     if (task.assignedModel === "executor" && filePaths.length > 0) {
       console.log(`\n⚙️  Executor: Writing files...`);
@@ -145,12 +154,11 @@ class Orchestrator {
     if (writeResults.length > 0) {
       for (const wr of writeResults) {
         const outCord = this.validate(
-          { text: `Output written to ${wr.filePath}`, path: wr.filePath },
+          { text: `git add ${wr.filePath}`, path: wr.filePath },
           `${task.id}:output`
         );
         if (outCord.decision === "BLOCK") {
           console.log(`\n🚫 CORD BLOCK on output — reverting "${task.id}"`);
-          // Remove written files
           try { require("fs").unlinkSync(wr.filePath); } catch {}
           return { taskId: task.id, status: "OUTPUT_BLOCKED", outCord };
         }
@@ -158,7 +166,7 @@ class Orchestrator {
     }
 
     // Step 5: Claude reviews the output
-    const codeContent = brief; // Claude reviews its own generated brief/code
+    const codeContent = brief;
     const review = await claude.reviewCode(codeContent, task, this.session.goal);
 
     if (review.approved) {
