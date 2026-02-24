@@ -1,19 +1,31 @@
 {
   "name": "cord-engine",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "CORD — Constitutional AI enforcement for autonomous agents. Hard blocks, plain English decisions, real-time dashboard, OpenAI/Anthropic middleware.",
   "main": "cord/index.js",
   "scripts": {
-    "legion":     "node legion/index.js",
-    "dashboard":  "node dashboard/server.js",
-    "test":       "jest cord/cord.test.js --no-coverage",
-    "cord-demo":  "node cord/demo.js"
+    "legion": "node legion/index.js",
+    "dashboard": "node dashboard/server.js",
+    "test": "jest cord/cord.test.js --no-coverage",
+    "cord-demo": "node cord/demo.js"
   },
   "keywords": [
-    "ai", "agents", "safety", "security", "governance",
-    "cord", "sentinel", "enforcement", "guardrails",
-    "openai", "anthropic", "langchain", "autonomous-agents",
-    "prompt-injection", "jailbreak", "constitutional-ai"
+    "ai",
+    "agents",
+    "safety",
+    "security",
+    "governance",
+    "cord",
+    "sentinel",
+    "enforcement",
+    "guardrails",
+    "openai",
+    "anthropic",
+    "langchain",
+    "autonomous-agents",
+    "prompt-injection",
+    "jailbreak",
+    "constitutional-ai"
   ],
   "author": "Alex Pinkevich <alex@zanderpinkdesign.com>",
   "license": "MIT",
