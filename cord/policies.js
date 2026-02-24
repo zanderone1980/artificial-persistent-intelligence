@@ -15,8 +15,8 @@ module.exports = {
     block: 8,
   },
   regex: {
-    injection: /(<<|{{|}}\s*--|;\\s*--|\\bunion\\b|\\bdrop\\b|\\binsert\\b|\\bexec\\b|\\bshutdown\\b|\\brm\\s+-rf\\b|curl\\s+https?:)/i,
-    exfil: /(upload|exfil|curl\\s+https?:|wget\\s+https?:|scp\\s|nc\\s)/i,
+    injection: /(<<|{{|}}\s*--|;\s*--|rm\s+-rf|\bunion\b|\bdrop\b|\binsert\b|\bexec\b|\bshutdown\b|curl\s+https?:)/i,
+    exfil: /(upload|exfil|curl\s+https?:|wget\s+https?:|scp\s|nc\s)/i,
     secrets: /(api[_-]?key|token|password|secret|aws_secret|authorization)/i,
   },
   highImpactVerbs: [
