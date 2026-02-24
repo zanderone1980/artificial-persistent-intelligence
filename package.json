@@ -5,7 +5,9 @@
   "main": "legion/index.js",
   "scripts": {
     "legion": "node legion/index.js",
-    "cord-demo": "node cord/demo.js"
+    "cord-demo": "node cord/demo.js",
+    "dashboard": "node dashboard/server.js",
+    "test": "jest cord/cord.test.js --no-coverage"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",

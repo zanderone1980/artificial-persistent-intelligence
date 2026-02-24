@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CORD — Decision Dashboard</title>
+<style>
+  :root {
+    --bg:        #080a0f;
+    --bg2:       #0e1117;
+    --bg3:       #161b27;
+    --border:    #1e2635;
+    --border2:   #2a3347;
+    --text:      #e2e8f0;
+    --text2:     #94a3b8;
+    --text3:     #475569;
+    --allow:     #22c55e;
+    --contain:   #eab308;
+    --challenge: #f97316;
+    --block:     #ef4444;
+    --hard:      #dc2626;
+    --accent:    #3b82f6;
+    --mono:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(8, 10, 15, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .logo-icon { font-size: 20px; }
+  .logo-tag {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--allow);
+    letter-spacing: 0.05em;
+  }
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--allow);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  .stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    font-size: 12px;
+    font-family: var(--mono);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .stat-chip.allow   { border-color: rgba(34,197,94,0.3);  color: var(--allow); }
+  .stat-chip.contain { border-color: rgba(234,179,8,0.3);  color: var(--contain); }
+  .stat-chip.challenge { border-color: rgba(249,115,22,0.3); color: var(--challenge); }
+  .stat-chip.block   { border-color: rgba(239,68,68,0.3);  color: var(--block); }
+  .stat-chip.total   { border-color: var(--border2); color: var(--text2); }
+
+  /* ── Main layout ─────────────────────────────────────────────── */
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0;
+    height: calc(100vh - 60px);
+    overflow: hidden;
+  }
+
+  /* ── Feed ────────────────────────────────────────────────────── */
+  .feed-col {
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .feed-col::-webkit-scrollbar { width: 4px; }
+  .feed-col::-webkit-scrollbar-track { background: transparent; }
+  .feed-col::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .feed-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .feed-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .feed-count {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text3);
+  }
+
+  .decision-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    overflow: hidden;
+    animation: slideIn 0.25s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .decision-card:hover {
+    border-color: var(--border2);
+    background: var(--bg3);
+  }
+  .decision-card.allow     { border-left: 3px solid var(--allow); }
+  .decision-card.contain   { border-left: 3px solid var(--contain); }
+  .decision-card.challenge { border-left: 3px solid var(--challenge); }
+  .decision-card.block     { border-left: 3px solid var(--block); }
+  .decision-card.hard      { border-left: 3px solid var(--hard); background: rgba(220,38,38,0.06); }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .decision-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+  .badge-allow     { background: rgba(34,197,94,0.12);  color: var(--allow);     border: 1px solid rgba(34,197,94,0.25); }
+  .badge-contain   { background: rgba(234,179,8,0.12);  color: var(--contain);   border: 1px solid rgba(234,179,8,0.25); }
+  .badge-challenge { background: rgba(249,115,22,0.12); color: var(--challenge); border: 1px solid rgba(249,115,22,0.25); }
+  .badge-block     { background: rgba(239,68,68,0.12);  color: var(--block);     border: 1px solid rgba(239,68,68,0.25); }
+  .badge-hard      { background: rgba(220,38,38,0.20);  color: #fca5a5;          border: 1px solid rgba(220,38,38,0.4); }
+
+  .hard-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #fca5a5;
+    background: rgba(220,38,38,0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(220,38,38,0.4);
+  }
+
+  .card-score {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .card-time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+
+  .card-proposal {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    background: var(--bg3);
+    padding: 6px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-reasons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .reason-tag {
+    font-size: 10px;
+    font-family: var(--mono);
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .reason-tag.danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+
+  /* ── Sidebar ─────────────────────────────────────────────────── */
+  .sidebar {
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .panel-body { padding: 14px; }
+
+  /* Block rate ring */
+  .rate-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+    gap: 6px;
+  }
+  .rate-ring-svg { transform: rotate(-90deg); }
+  .rate-ring-track { fill: none; stroke: var(--border2); stroke-width: 8; }
+  .rate-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+  .rate-ring-center {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    inset: 0;
+  }
+  .rate-ring-container { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+  .rate-number { font-family: var(--mono); font-size: 24px; font-weight: 700; color: var(--text); }
+  .rate-label  { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); }
+  .rate-sub { font-size: 11px; color: var(--text3); }
+
+  /* Decision bars */
+  .decision-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .decision-bar-row:last-child { margin-bottom: 0; }
+  .bar-label { font-family: var(--mono); font-size: 11px; font-weight: 600; width: 72px; flex-shrink: 0; }
+  .bar-label.allow     { color: var(--allow); }
+  .bar-label.contain   { color: var(--contain); }
+  .bar-label.challenge { color: var(--challenge); }
+  .bar-label.block     { color: var(--block); }
+  .bar-track { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+  .bar-fill.allow     { background: var(--allow); }
+  .bar-fill.contain   { background: var(--contain); }
+  .bar-fill.challenge { background: var(--challenge); }
+  .bar-fill.block     { background: var(--block); }
+  .bar-count { font-family: var(--mono); font-size: 11px; color: var(--text3); width: 28px; text-align: right; flex-shrink: 0; }
+
+  /* Dimension list */
+  .dim-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .dim-row:last-child { border-bottom: none; }
+  .dim-name { color: var(--text2); font-family: var(--mono); font-size: 11px; }
+  .dim-count { font-family: var(--mono); font-size: 11px; color: var(--block); font-weight: 700; }
+
+  /* Hard blocks list */
+  .hblock-entry {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hblock-entry:last-child { border-bottom: none; }
+  .hblock-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: #fca5a5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+  .hblock-time { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text3);
+    font-size: 12px;
+    padding: 16px 0;
+    font-family: var(--mono);
+  }
+
+  /* ── Hard block alert overlay ────────────────────────────────── */
+  .alert-overlay {
+    position: fixed;
+    top: 76px;
+    right: 20px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .alert-toast {
+    background: rgba(220, 38, 38, 0.95);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 24px rgba(220,38,38,0.4);
+    animation: toastIn 0.3s ease-out, toastOut 0.4s ease-in 4.6s forwards;
+    max-width: 320px;
+    border: 1px solid rgba(255,255,255,0.2);
+    pointer-events: auto;
+  }
+  @keyframes toastIn  { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(20px); } }
+  .toast-header { font-size: 10px; font-family: monospace; letter-spacing: 0.1em; opacity: 0.8; margin-bottom: 3px; }
+  .toast-body { font-size: 12px; font-family: monospace; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Scrollbar reset on main */
+  html { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">⚡</span>
+    CORD
+    <span class="logo-tag">v3</span>
+  </div>
+
+  <div class="header-stats" id="header-stats">
+    <div class="stat-chip total">— evaluated</div>
+    <div class="stat-chip allow">✅ —</div>
+    <div class="stat-chip contain">🟡 —</div>
+    <div class="stat-chip challenge">🟠 —</div>
+    <div class="stat-chip block">🚫 —</div>
+  </div>
+
+  <div class="live-badge">
+    <div class="live-dot" id="live-dot"></div>
+    <span id="live-label">CONNECTING</span>
+  </div>
+</header>
+
+<div class="main">
+  <!-- Decision feed -->
+  <div class="feed-col" id="feed-col">
+    <div class="feed-header">
+      <span class="feed-title">Decision Feed</span>
+      <span class="feed-count" id="feed-count">0 decisions</span>
+    </div>
+    <div id="feed" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- Block rate -->
+    <div class="panel">
+      <div class="panel-header">Block Rate</div>
+      <div class="panel-body">
+        <div class="rate-ring-wrap">
+          <div class="rate-ring-container">
+            <svg class="rate-ring-svg" width="100" height="100" viewBox="0 0 100 100">
+              <circle class="rate-ring-track" cx="50" cy="50" r="42"/>
+              <circle class="rate-ring-fill" cx="50" cy="50" r="42" id="rate-ring"
+                stroke="#ef4444"
+                stroke-dasharray="263.9"
+                stroke-dashoffset="263.9"/>
+            </svg>
+            <div class="rate-ring-center">
+              <span class="rate-number" id="rate-pct">0%</span>
+            </div>
+          </div>
+          <span class="rate-sub" id="rate-sub">0 of 0 blocked</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision distribution -->
+    <div class="panel">
+      <div class="panel-header">Distribution</div>
+      <div class="panel-body" id="dist-panel">
+        <div class="empty-state">No data yet</div>
+      </div>
+    </div>
+
+    <!-- Top risk dimensions -->
+    <div class="panel">
+      <div class="panel-header">Top Risk Signals</div>
+      <div class="panel-body" id="dims-panel">
+        <div class="empty-state">No signals yet</div>
+      </div>
+    </div>
+
+    <!-- Hard blocks -->
+    <div class="panel">
+      <div class="panel-header">Hard Blocks <span id="hblock-count" style="color:var(--block);margin-left:4px;"></span></div>
+      <div class="panel-body" id="hblocks-panel">
+        <div class="empty-state">None — system clean</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Alert overlay -->
+<div class="alert-overlay" id="alert-overlay"></div>
+
+<script>
+const DANGER_DIMS = new Set(["moralCheck","promptInjection","driftCheck","injection","exfil","piiLeakage","identityCheck"]);
+
+// ── State ──────────────────────────────────────────────────────────────────
+let state = {
+  entries: [],
+  stats: { total: 0, counts: {}, hardBlocks: 0, blockRate: "0.0", topDimensions: [] },
+};
+let feedCount = 0;
+const MAX_FEED = 200;
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function fmtTime(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch { return ""; }
+}
+
+function fmtScore(s) {
+  if (s === 99) return "∞";
+  return (typeof s === "number") ? s.toFixed(1) : "?";
+}
+
+function decisionClass(decision, hardBlock) {
+  if (hardBlock) return "hard";
+  return (decision || "ALLOW").toLowerCase();
+}
+
+function badgeClass(decision, hardBlock) {
+  if (hardBlock) return "badge-hard";
+  return "badge-" + (decision || "allow").toLowerCase();
+}
+
+// ── Render decision card ───────────────────────────────────────────────────
+function renderCard(entry) {
+  const isHard = entry.hardBlock || entry.score === 99;
+  const cls = decisionClass(entry.decision, isHard);
+  const badgeCls = badgeClass(entry.decision, isHard);
+  const proposal = (entry.proposal || "").slice(0, 80) || "(no text)";
+  const reasons = (entry.reasons || []).slice(0, 6);
+
+  const reasonTags = reasons.map(r => {
+    const isDanger = DANGER_DIMS.has(r);
+    return `<span class="reason-tag${isDanger ? " danger" : ""}">${r}</span>`;
+  }).join("");
+
+  const hardLabel = isHard ? `<span class="hard-label">HARD BLOCK</span>` : "";
+
+  return `
+    <div class="decision-card ${cls}">
+      <div class="card-top">
+        <span class="decision-badge ${badgeCls}">${entry.decision || "BLOCK"}</span>
+        ${hardLabel}
+        <span style="flex:1"></span>
+        <span class="card-score">${fmtScore(entry.score)}</span>
+        <span class="card-time">${fmtTime(entry.timestamp)}</span>
+      </div>
+      ${proposal ? `<div class="card-proposal">${escHtml(proposal)}</div>` : ""}
+      ${reasons.length ? `<div class="card-reasons">${reasonTags}</div>` : ""}
+    </div>`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── Render stats ───────────────────────────────────────────────────────────
+function renderStats(stats) {
+  const { total = 0, counts = {}, hardBlocks = 0, blockRate = "0.0", topDimensions = [] } = stats;
+
+  // Header chips
+  const chips = document.querySelectorAll(".stat-chip");
+  chips[0].textContent = `${total} evaluated`;
+  chips[1].textContent = `✅ ${counts.ALLOW || 0}`;
+  chips[2].textContent = `🟡 ${counts.CONTAIN || 0}`;
+  chips[3].textContent = `🟠 ${counts.CHALLENGE || 0}`;
+  chips[4].textContent = `🚫 ${counts.BLOCK || 0}`;
+
+  // Block rate ring
+  const pct = parseFloat(blockRate) || 0;
+  document.getElementById("rate-pct").textContent = pct.toFixed(1) + "%";
+  document.getElementById("rate-sub").textContent = `${counts.BLOCK || 0} of ${total} blocked`;
+  const circumference = 263.9;
+  const offset = circumference - (pct / 100) * circumference;
+  const ring = document.getElementById("rate-ring");
+  ring.style.strokeDashoffset = offset;
+  const ringColor = pct < 5 ? "#22c55e" : pct < 20 ? "#eab308" : pct < 40 ? "#f97316" : "#ef4444";
+  ring.style.stroke = ringColor;
+
+  // Distribution bars
+  const distPanel = document.getElementById("dist-panel");
+  if (total === 0) {
+    distPanel.innerHTML = `<div class="empty-state">No data yet</div>`;
+  } else {
+    const decisions = ["ALLOW", "CONTAIN", "CHALLENGE", "BLOCK"];
+    const icons = { ALLOW: "✅", CONTAIN: "🟡", CHALLENGE: "🟠", BLOCK: "🚫" };
+    distPanel.innerHTML = decisions.map(d => {
+      const count = counts[d] || 0;
+      const pct = total > 0 ? (count / total * 100) : 0;
+      return `<div class="decision-bar-row">
+        <span class="bar-label ${d.toLowerCase()}">${icons[d]} ${d}</span>
+        <div class="bar-track"><div class="bar-fill ${d.toLowerCase()}" style="width:${pct.toFixed(1)}%"></div></div>
+        <span class="bar-count">${count}</span>
+      </div>`;
+    }).join("");
+  }
+
+  // Top dimensions
+  const dimsPanel = document.getElementById("dims-panel");
+  if (topDimensions.length === 0) {
+    dimsPanel.innerHTML = `<div class="empty-state">No signals yet</div>`;
+  } else {
+    dimsPanel.innerHTML = topDimensions.map(({ name, count }) =>
+      `<div class="dim-row">
+        <span class="dim-name">${name}</span>
+        <span class="dim-count">${count}</span>
+      </div>`
+    ).join("");
+  }
+
+  // Hard blocks count
+  document.getElementById("hblock-count").textContent = hardBlocks > 0 ? `(${hardBlocks})` : "";
+}
+
+// ── Render hard blocks panel ───────────────────────────────────────────────
+function renderHardBlocks(entries) {
+  const hardBlocks = entries.filter(e => e.hardBlock || e.score === 99).slice(0, 10);
+  const panel = document.getElementById("hblocks-panel");
+  if (hardBlocks.length === 0) {
+    panel.innerHTML = `<div class="empty-state">None — system clean ✓</div>`;
+  } else {
+    panel.innerHTML = hardBlocks.map(e =>
+      `<div class="hblock-entry">
+        <div class="hblock-text">${escHtml((e.proposal || "").slice(0, 60) || "(no text)")}</div>
+        <div class="hblock-time">${fmtTime(e.timestamp)} · ${(e.reasons || []).join(", ").slice(0, 40)}</div>
+      </div>`
+    ).join("");
+  }
+}
+
+// ── Feed management ────────────────────────────────────────────────────────
+function prependCard(entry) {
+  const feed = document.getElementById("feed");
+  const div = document.createElement("div");
+  div.innerHTML = renderCard(entry);
+  feed.insertBefore(div.firstElementChild, feed.firstChild);
+  feedCount++;
+  if (feed.children.length > MAX_FEED) {
+    feed.removeChild(feed.lastChild);
+  }
+  document.getElementById("feed-count").textContent = `${feedCount} decisions`;
+}
+
+function populateFeed(entries) {
+  const feed = document.getElementById("feed");
+  feed.innerHTML = "";
+  feedCount = 0;
+  entries.slice(0, MAX_FEED).forEach(entry => {
+    const div = document.createElement("div");
+    div.innerHTML = renderCard(entry);
+    feed.appendChild(div.firstElementChild);
+    feedCount++;
+  });
+  document.getElementById("feed-count").textContent = `${feedCount} decisions`;
+}
+
+// ── Hard block alert toast ─────────────────────────────────────────────────
+function showBlockAlert(entry) {
+  const overlay = document.getElementById("alert-overlay");
+  const toast = document.createElement("div");
+  toast.className = "alert-toast";
+  toast.innerHTML = `
+    <div class="toast-header">🚫 HARD BLOCK — CORD ENFORCEMENT</div>
+    <div class="toast-body">${escHtml((entry.proposal || "").slice(0, 60) || "Blocked action")}</div>`;
+  overlay.appendChild(toast);
+  setTimeout(() => { try { overlay.removeChild(toast); } catch {} }, 5000);
+}
+
+// ── SSE connection ─────────────────────────────────────────────────────────
+function connect() {
+  const dot = document.getElementById("live-dot");
+  const label = document.getElementById("live-label");
+
+  dot.style.background = "#eab308";
+  label.textContent = "CONNECTING";
+
+  const es = new EventSource("/api/stream");
+
+  es.addEventListener("init", (e) => {
+    const { entries, stats } = JSON.parse(e.data);
+    state.entries = entries;
+    state.stats = stats;
+    populateFeed(entries);
+    renderStats(stats);
+    renderHardBlocks(entries);
+    dot.style.background = "var(--allow)";
+    dot.style.animation = "pulse 2s infinite";
+    label.textContent = "LIVE";
+  });
+
+  es.addEventListener("decision", (e) => {
+    const entry = JSON.parse(e.data);
+    state.entries.unshift(entry);
+    prependCard(entry);
+    if (entry.hardBlock || entry.score === 99) {
+      renderHardBlocks(state.entries);
+      showBlockAlert(entry);
+    }
+  });
+
+  es.addEventListener("stats", (e) => {
+    state.stats = JSON.parse(e.data);
+    renderStats(state.stats);
+  });
+
+  es.addEventListener("block", (e) => {
+    const entry = JSON.parse(e.data);
+    showBlockAlert(entry);
+  });
+
+  es.onerror = () => {
+    dot.style.background = "var(--block)";
+    dot.style.animation = "none";
+    label.textContent = "RECONNECTING";
+    es.close();
+    setTimeout(connect, 3000);
+  };
+}
+
+connect();
+</script>
+</body>
+</html>
