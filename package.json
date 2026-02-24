@@ -1,0 +1,14 @@
+{
+  "name": "legion-ai",
+  "version": "0.1.0",
+  "description": "LEGION AI — Multi-model orchestration with CORD enforcement",
+  "main": "legion/index.js",
+  "scripts": {
+    "legion": "node legion/index.js",
+    "cord-demo": "node cord/demo.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.0",
+    "dotenv": "^16.0.0"
+  }
+}
