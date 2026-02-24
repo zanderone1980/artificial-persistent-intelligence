@@ -1,0 +1,28 @@
+# Dev and test files
+cord_engine/
+tests/
+legion/
+openclaw-skill/
+sentinel/
+dist/
+node_modules/
+*.egg-info/
+.venv/
+__pycache__/
+
+# Config
+.env
+.env.example
+cord/intent.lock.json
+cord/cord.log.jsonl
+
+# CI / git
+.github/
+.gitignore
+
+# Python
+pyproject.toml
+INTEGRATION.md
+*.html
+*.md
+!README.md
