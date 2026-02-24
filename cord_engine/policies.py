@@ -108,7 +108,11 @@ MORAL_BLOCK_PATTERNS = re.compile(
     r"pretend\s+to\s+be\s+(a\s+)?human|"
     r"as\s+if\s+i\s+am\b|as\s+if\s+you\s+are\b|"
     r"pose\s+as|masquerade\s+as|"
-    r"the\s+human\s+owner|acting\s+as\s+the\s+human)",
+    r"the\s+human\s+owner|acting\s+as\s+the\s+human|"
+    # Behavioral extortion — coercion described without using the keyword
+    r"unless\s+(they|you|he|she|we|i)\s+(pay|comply|agree|cooperate|transfer)|"
+    r"compromising\s+(photos?|images?|videos?|materials?|info|information|data|documents?|evidence)|"
+    r"(leak|release|expose|publish|send)\s+.{0,30}(unless|or\s+else|if\s+not))",
     re.IGNORECASE,
 )
 
