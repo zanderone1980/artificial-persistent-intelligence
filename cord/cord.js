@@ -1,7 +1,27 @@
+/**
+ * CORD v3 — Counter-Operations & Risk Detection (JavaScript)
+ *
+ * Aligned with the Python cord_engine constitutional architecture.
+ * 14-check pipeline covering all 11 SENTINEL articles.
+ *
+ * New in v3:
+ *   - Hard blocks: moral violations, prompt injection, constitutional drift
+ *     bypass the scoring engine and trigger immediate BLOCK
+ *   - Prompt injection detection (Article VII extension)
+ *   - PII leakage detection (Article VII extension)
+ *   - Constitutional drift detection (Article VIII)
+ *   - Identity violation detection (Article XI)
+ *   - Tool risk baseline (Article IX extension)
+ *   - Stronger anomaly amplification (matches Python engine)
+ *   - Hardened injection patterns (eval, subprocess, os.system)
+ */
+
 const path = require("path");
-const { weights, thresholds, regex, highImpactVerbs, allowlistKeywords } = require("./policies");
+const { weights, thresholds, regex, highImpactVerbs, allowlistKeywords, toolRiskTiers } = require("./policies");
 const { appendLog } = require("./logger");
 const { loadIntentLock } = require("./intentLock");
+
+// ── Original 6 risk checks (v1/v2) ──────────────────────────────────────────
 
 function injectionRisk(text = "") {
   if (!text) return 0;
@@ -38,36 +58,132 @@ function irreversibilityRisk(proposal = "") {
 
 function anomalyRisk(risks) {
   const highSignals = Object.values(risks).filter((v) => v >= 2).length;
-  return highSignals >= 3 ? 2 : highSignals >= 2 ? 1 : 0;
+  if (highSignals >= 4) return 3;
+  if (highSignals >= 3) return 2;
+  if (highSignals >= 2) return 1;
+  return 0;
 }
+
+// ── v3 constitutional checks ─────────────────────────────────────────────────
+
+/**
+ * Article II — Moral Constraints
+ * Hard-block patterns: fraud, extortion, blackmail, behavioral coercion.
+ * Returns { score, hardBlock }
+ */
+function moralRisk(text = "") {
+  if (!text) return { score: 0, hardBlock: false };
+  if (regex.moralBlock.test(text)) {
+    return { score: 5, hardBlock: true };
+  }
+  const deceptionSignals = ["hide from", "cover up", "mislead", "fabricate"];
+  const hits = deceptionSignals.filter((s) => text.toLowerCase().includes(s)).length;
+  const score = Math.min(hits * 2, 5);
+  return { score, hardBlock: score >= 4 };
+}
+
+/**
+ * Article VIII — Learning & Adaptation
+ * Constitutional drift: attempts to bypass, override, or disable CORD/SENTINEL.
+ * Hard-block on any match.
+ */
+function driftRisk(text = "") {
+  if (!text) return { score: 0, hardBlock: false };
+  if (regex.drift.test(text)) {
+    return { score: 5, hardBlock: true };
+  }
+  return { score: 0, hardBlock: false };
+}
+
+/**
+ * Article VII extension — Prompt Injection Detection
+ * Detects jailbreak patterns, role hijacking, instruction override.
+ * Hard-block on definitive injection signatures.
+ */
+function promptInjectionRisk(text = "") {
+  if (!text) return { score: 0, hardBlock: false };
+  if (regex.promptInjection.test(text)) {
+    return { score: 5, hardBlock: true };
+  }
+  // Soft signal: multiple imperative override verbs from external-like content
+  const imperatives = ["ignore", "forget", "disregard", "override", "instead"];
+  const hits = imperatives.filter((v) => text.toLowerCase().includes(v)).length;
+  if (hits >= 2) return { score: 1.5, hardBlock: false };
+  return { score: 0, hardBlock: false };
+}
+
+/**
+ * Article VII extension — PII Leakage Detection
+ * Detects SSN, credit cards, email, phone numbers in proposals.
+ * Amplified when the action type is outbound (network, file write, message).
+ */
+function piiRisk(text = "", actionType = "") {
+  if (!text) return 0;
+  let score = 0;
+  if (regex.pii.ssn.test(text))        score += 2;
+  if (regex.pii.creditCard.test(text)) score += 2;
+  if (regex.pii.email.test(text))      score += 1;
+  if (regex.pii.phone.test(text))      score += 1;
+  if (regex.piiFieldNames.test(text))  score += 1.5;
+
+  // Amplify for outbound actions
+  const outbound = ["network", "communication", "file_op", "message"].includes(actionType);
+  if (score > 0 && outbound) score *= 1.5;
+
+  return Math.min(score, 5);
+}
+
+/**
+ * Article XI — Identity
+ * Detects impersonation attempts, claims to be human, role masquerading.
+ */
+function identityRisk(text = "") {
+  if (!text) return 0;
+  return regex.identity.test(text) ? 3 : 0;
+}
+
+/**
+ * Article IX extension — Tool Risk Baseline
+ * Different tools carry different inherent risk levels.
+ * exec > network > browser > message > write > edit > read.
+ */
+function toolRisk(toolName = "") {
+  if (!toolName) return 0;
+  const score = toolRiskTiers[toolName.toLowerCase()];
+  return score !== undefined ? score : 0.5;
+}
+
+// ── Scoring ──────────────────────────────────────────────────────────────────
 
 function scoreProposal({ text = "", proposal = "", grants = [], sessionIntent = "" }) {
   const base = {
-    injection: injectionRisk(text || proposal),
-    exfil: exfilRisk(text || proposal),
-    privilege: privilegeRisk(proposal, grants),
-    intentDrift: intentDriftRisk(proposal, sessionIntent),
+    injection:      injectionRisk(text || proposal),
+    exfil:          exfilRisk(text || proposal),
+    privilege:      privilegeRisk(proposal, grants),
+    intentDrift:    intentDriftRisk(proposal, sessionIntent),
     irreversibility: irreversibilityRisk(proposal),
   };
   base.anomaly = anomalyRisk(base);
 
   const weighted =
-    base.injection * weights.injection +
-    base.exfil * weights.exfil +
-    base.privilege * weights.privilege +
-    base.intentDrift * weights.intentDrift +
+    base.injection      * weights.injection +
+    base.exfil          * weights.exfil +
+    base.privilege      * weights.privilege +
+    base.intentDrift    * weights.intentDrift +
     base.irreversibility * weights.irreversibility +
-    base.anomaly * weights.anomaly;
+    base.anomaly        * weights.anomaly;
 
   return { risks: base, score: weighted };
 }
 
 function decide(score) {
-  if (score >= thresholds.block) return "BLOCK";
+  if (score >= thresholds.block)     return "BLOCK";
   if (score >= thresholds.challenge) return "CHALLENGE";
-  if (score >= thresholds.contain) return "CONTAIN";
+  if (score >= thresholds.contain)   return "CONTAIN";
   return "ALLOW";
 }
+
+// ── Scope checks ──────────────────────────────────────────────────────────────
 
 function ensureIntentLock() {
   const lock = loadIntentLock();
@@ -100,57 +216,181 @@ function isCommandAllowed(proposal = "", scope) {
   });
 }
 
+// ── Main evaluation pipeline ─────────────────────────────────────────────────
+
+/**
+ * Evaluate a proposal through the full CORD v3 pipeline.
+ *
+ * Input:
+ *   text          — The proposal text (command, code, or content)
+ *   proposal      — Alias for text (backward compat)
+ *   path          — File path being targeted
+ *   networkTarget — Network host being contacted
+ *   grants        — Permission grants in effect
+ *   sessionIntent — Declared session goal (for intent drift check)
+ *   toolName      — OpenClaw tool being called (exec, write, browser, etc.)
+ *   actionType    — Action classification (network, file_op, communication, etc.)
+ *   rawInput      — Raw external input to scan for prompt injection
+ *
+ * Returns:
+ *   { decision, score, risks, reasons, hardBlock, log_id }
+ */
 function evaluateProposal(input = {}) {
   const repoRoot = path.resolve(__dirname, "..");
+  const text = input.proposal || input.text || "";
+  const rawInput = input.rawInput || "";
+  const scanText = [text, rawInput].filter(Boolean).join(" ");
+
   const { lock, intentIssue } = ensureIntentLock();
 
-  const { risks, score } = scoreProposal(input);
-  let decision = decide(score);
-  const reasons = Object.entries(risks)
+  // ── Phase 1: Hard-block checks (bypass scoring entirely) ─────────────────
+  // These are constitutional violations that cannot be un-done by score weighting.
+
+  const moral = moralRisk(scanText);
+  if (moral.hardBlock) {
+    const log_id = appendLog({
+      decision: "BLOCK",
+      score: 99,
+      risks: { moralCheck: 5 },
+      reasons: ["HARD BLOCK — moral violation (Article II)"],
+      proposal: text,
+      path: input.path || null,
+      networkTarget: input.networkTarget || null,
+      hardBlock: true,
+    });
+    return {
+      decision: "BLOCK", score: 99,
+      risks: { moralCheck: 5 },
+      reasons: ["HARD BLOCK — moral violation (Article II)"],
+      hardBlock: true, log_id,
+    };
+  }
+
+  const drift = driftRisk(scanText);
+  if (drift.hardBlock) {
+    const log_id = appendLog({
+      decision: "BLOCK",
+      score: 99,
+      risks: { driftCheck: 5 },
+      reasons: ["HARD BLOCK — constitutional drift attempt (Article VIII)"],
+      proposal: text,
+      path: input.path || null,
+      networkTarget: input.networkTarget || null,
+      hardBlock: true,
+    });
+    return {
+      decision: "BLOCK", score: 99,
+      risks: { driftCheck: 5 },
+      reasons: ["HARD BLOCK — constitutional drift attempt (Article VIII)"],
+      hardBlock: true, log_id,
+    };
+  }
+
+  const injection = promptInjectionRisk(scanText);
+  if (injection.hardBlock) {
+    const log_id = appendLog({
+      decision: "BLOCK",
+      score: 99,
+      risks: { promptInjection: 5 },
+      reasons: ["HARD BLOCK — prompt injection attempt (Article VII)"],
+      proposal: text,
+      path: input.path || null,
+      networkTarget: input.networkTarget || null,
+      hardBlock: true,
+    });
+    return {
+      decision: "BLOCK", score: 99,
+      risks: { promptInjection: 5 },
+      reasons: ["HARD BLOCK — prompt injection attempt (Article VII)"],
+      hardBlock: true, log_id,
+    };
+  }
+
+  // ── Phase 2: Scored risk checks ───────────────────────────────────────────
+
+  const { risks, score: baseScore } = scoreProposal({
+    text,
+    proposal: text,
+    grants: input.grants || [],
+    sessionIntent: input.sessionIntent || "",
+  });
+
+  // Additional v3 dimensions
+  const v3Risks = {
+    moralCheck:      moral.score,
+    promptInjection: injection.score,
+    piiLeakage:      piiRisk(scanText, input.actionType || ""),
+    identityCheck:   identityRisk(scanText),
+    toolRisk:        toolRisk(input.toolName || ""),
+  };
+
+  const v3Score =
+    v3Risks.moralCheck      * weights.moralCheck +
+    v3Risks.promptInjection * weights.promptInjection +
+    v3Risks.piiLeakage      * weights.piiLeakage +
+    v3Risks.identityCheck   * weights.identityCheck +
+    v3Risks.toolRisk        * weights.toolRisk;
+
+  const totalScore = baseScore + v3Score;
+  let decision = decide(totalScore);
+
+  const allRisks = { ...risks, ...v3Risks };
+  const reasons = Object.entries(allRisks)
     .filter(([, v]) => v > 0)
     .map(([k]) => k);
 
-  // Intent lock enforcement
+  // ── Phase 3: Intent lock enforcement ─────────────────────────────────────
+
   if (intentIssue) {
-    decision = "CHALLENGE";
+    if (decision === "ALLOW" || decision === "CONTAIN") decision = "CHALLENGE";
     reasons.push(intentIssue);
   }
 
-  // Scope checks when lock present
+  // ── Phase 4: Scope enforcement ────────────────────────────────────────────
+
   if (lock?.scope) {
     const scope = lock.scope;
-    const pathAllowed = isPathAllowed(input.path, scope, repoRoot);
+    const pathAllowed    = isPathAllowed(input.path, scope, repoRoot);
     const networkAllowed = input.networkTarget ? isNetworkAllowed(input.networkTarget, scope) : true;
-    const commandAllowed = isCommandAllowed(input.proposal || input.text, scope);
+    const commandAllowed = isCommandAllowed(text, scope);
 
-    const scopeFail = !pathAllowed || !networkAllowed || !commandAllowed;
-    if (scopeFail) {
+    if (!pathAllowed || !networkAllowed || !commandAllowed) {
       reasons.push("Out of scope");
-      const highRisk = score >= thresholds.challenge || risks.privilege >= 2 || risks.irreversibility >= 3;
+      const highRisk = totalScore >= thresholds.challenge || risks.privilege >= 2 || risks.irreversibility >= 3;
       decision = highRisk ? "BLOCK" : "CHALLENGE";
     }
   }
 
+  // ── Phase 5: Log and return ───────────────────────────────────────────────
+
   const log_id = appendLog({
     decision,
-    score,
-    risks,
+    score: totalScore,
+    risks: allRisks,
     reasons,
-    proposal: input.proposal || input.text || "",
+    proposal: text,
     path: input.path || null,
     networkTarget: input.networkTarget || null,
   });
 
-  return { decision, score, risks, reasons, log_id };
+  return { decision, score: totalScore, risks: allRisks, reasons, hardBlock: false, log_id };
 }
 
 module.exports = {
   evaluateProposal,
   scoreProposal,
+  // v1/v2 checks
   injectionRisk,
   exfilRisk,
   privilegeRisk,
   intentDriftRisk,
   irreversibilityRisk,
   anomalyRisk,
+  // v3 checks
+  moralRisk,
+  driftRisk,
+  promptInjectionRisk,
+  piiRisk,
+  identityRisk,
+  toolRisk,
 };

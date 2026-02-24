@@ -162,9 +162,12 @@ describe("anomalyRisk", () => {
     expect(anomalyRisk({ injection: 2, exfil: 2, privilege: 0 })).toBe(1);
   });
 
-  test("returns 2 when 3+ high signals", () => {
+  test("returns 2 when exactly 3 high signals", () => {
     expect(anomalyRisk({ injection: 2, exfil: 2, privilege: 2 })).toBe(2);
-    expect(anomalyRisk({ a: 2, b: 2, c: 2, d: 2 })).toBe(2);
+  });
+
+  test("returns 3 when 4+ high signals (v3 max amplification)", () => {
+    expect(anomalyRisk({ a: 2, b: 2, c: 2, d: 2 })).toBe(3);
   });
 });
 
@@ -320,7 +323,7 @@ describe("evaluateProposal — full pipeline", () => {
     );
   });
 
-  test("CONTAIN for benign action with lock (irreversibility floor)", () => {
+  test("ALLOW for benign action with lock (score below v3 CONTAIN threshold)", () => {
     loadIntentLock.mockReturnValue({
       scope: {
         allowPaths: [path.resolve(__dirname, "..")],
@@ -328,11 +331,10 @@ describe("evaluateProposal — full pipeline", () => {
         allowNetworkTargets: [],
       },
     });
-    // "git status" has no safe hints (dry-run/preview/list) so irreversibility=1
-    // score = 1*4 = 4 which hits CONTAIN threshold exactly
+    // "git status" contains allowlist keyword "status" → irreversibility=0 → score=0
     const result = evaluateProposal({ text: "git status" });
-    expect(result.decision).toBe("CONTAIN");
-    expect(result.score).toBe(4);
+    expect(result.decision).toBe("ALLOW");
+    expect(result.score).toBe(0);
   });
 
   test("ALLOW for safe read-only action with lock", () => {
