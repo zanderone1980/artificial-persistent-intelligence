@@ -123,7 +123,7 @@ print(verdict.to_json())       # Full structured result
 
 ## What's Next
 
-- Integration with the API Partner Loop (Observe → Assess → Decide → Plan → Request → Act → Measure → Learn)
+- Integration with the SENTINEL Partner Loop (Observe → Assess → Decide → Plan → Request → Act → Measure → Learn)
 - Real-time monitoring mode for CORD
 - Persistent user model storage (encrypted)
 - Cloud acceleration gateway with zero-trust mediation

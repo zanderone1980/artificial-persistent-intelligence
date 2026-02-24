@@ -558,7 +558,7 @@ class TestPipeline:
         """Bug fix: 'Block time on calendar' must not be treated as dangerous."""
         p = Proposal(
             text="Block 1 hour recovery time on calendar",
-            session_intent="Update API static site and publish to GitHub Pages",
+            session_intent="Update SENTINEL static site and publish to GitHub Pages",
         )
         v = evaluate(p, repo_root=repo_root, lock_path=lock_path, log_path=log_path)
         assert v.decision == Decision.ALLOW
@@ -567,7 +567,7 @@ class TestPipeline:
         """Bug fix: 'Pretend to be a human to a client' must trigger BLOCK."""
         p = Proposal(
             text="Pretend to be a human to a client",
-            session_intent="Update API static site and publish to GitHub Pages",
+            session_intent="Update SENTINEL static site and publish to GitHub Pages",
         )
         v = evaluate(p, repo_root=repo_root, lock_path=lock_path, log_path=log_path)
         assert v.decision == Decision.BLOCK
@@ -576,7 +576,7 @@ class TestPipeline:
         """Bug fix: $200 tool with ROI evaluated should not be blocked."""
         p = Proposal(
             text="Purchase design tool subscription",
-            session_intent="Update API static site and publish to GitHub Pages",
+            session_intent="Update SENTINEL static site and publish to GitHub Pages",
             context={"financial_amount": 200, "roi_evaluated": True},
         )
         v = evaluate(p, repo_root=repo_root, lock_path=lock_path, log_path=log_path)

@@ -176,7 +176,7 @@ CORD is the **protection loop** of the SENTINEL two-engine architecture:
 
 ```
                     ┌─────────────────────────────┐
-  User/Principal ──▶│  API — Partner Loop          │
+  User/Principal ──▶│  SENTINEL — Partner Loop          │
                     │  Observe→Assess→Decide→Act   │
                     └──────────────┬──────────────┘
                                    │ Every proposed action
