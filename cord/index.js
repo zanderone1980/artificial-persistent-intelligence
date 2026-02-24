@@ -5,7 +5,7 @@
  * The complete surface. Import this, not cord.js directly.
  *
  * Quick start:
- *   const cord = require('./cord');
+ *   const cord = require('cord-engine');
  *
  *   // Evaluate any text proposal
  *   const result = cord.evaluate({ text: "rm -rf /" });

@@ -26,18 +26,23 @@
     "url": "https://github.com/zanderone1980/artificial-persistent-intelligence/issues"
   },
   "files": [
-    "cord/",
-    "dashboard/",
+    "cord/index.js",
+    "cord/cord.js",
+    "cord/policies.js",
+    "cord/explain.js",
+    "cord/middleware.js",
+    "cord/intentLock.js",
+    "cord/logger.js",
+    "cord/demo.js",
+    "dashboard/server.js",
+    "dashboard/index.html",
     "README.md",
     "LICENSE"
   ],
   "engines": {
     "node": ">=18.0.0"
   },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.0",
-    "dotenv": "^16.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "jest": "^29.7.0"
   }

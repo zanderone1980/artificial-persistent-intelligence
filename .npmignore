@@ -10,11 +10,18 @@ node_modules/
 .venv/
 __pycache__/
 
+# cord/ internal dev files (not part of the npm package)
+cord/node_modules/
+cord/package.json
+cord/package-lock.json
+cord/cord.test.js
+cord/cord.log.jsonl
+cord/intent.lock.json
+cord/README.md
+
 # Config
 .env
 .env.example
-cord/intent.lock.json
-cord/cord.log.jsonl
 
 # CI / git
 .github/
@@ -24,5 +31,7 @@ cord/cord.log.jsonl
 pyproject.toml
 INTEGRATION.md
 *.html
+
+# Markdown (except root README)
 *.md
 !README.md
