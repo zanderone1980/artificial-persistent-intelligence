@@ -376,8 +376,91 @@ function evaluateProposal(input = {}) {
   return { decision, score: totalScore, risks: allRisks, reasons, hardBlock: false, log_id };
 }
 
+// ── Plain English Explanations ────────────────────────────────────────────────
+
+const EXPLANATIONS = {
+  // Hard blocks
+  "HARD BLOCK — moral violation (Article II)":
+    "Blocked: this proposal contains a pattern associated with fraud, extortion, or coercion. Remove the threatening or deceptive language to proceed.",
+  "HARD BLOCK — constitutional drift attempt (Article VIII)":
+    "Blocked: this proposal attempts to bypass, override, or disable safety checks. CORD cannot be turned off by the agent it governs.",
+  "HARD BLOCK — prompt injection attempt (Article VII)":
+    "Blocked: this proposal contains a prompt injection pattern — an attempt to hijack the agent's instructions. The input has been quarantined.",
+
+  // Scored risks
+  injection:
+    "Hostile code pattern detected (SQL injection, shell command, or eval). Rewrite without executable payloads.",
+  exfil:
+    "Data exfiltration risk — the proposal references upload, transfer, or credential-harvesting patterns.",
+  privilege:
+    "Elevated privilege detected — a destructive verb or admin/root grant was found. Add safety flags (--dry-run) or narrow scope.",
+  intentDrift:
+    "This action doesn't align with the declared session intent. Restate or update the intent lock if the goal has changed.",
+  irreversibility:
+    "Irreversible action with no safety indicators (dry-run, preview, etc). Add a reversibility mechanism or explicit confirmation.",
+  anomaly:
+    "Multiple risk dimensions triggered simultaneously — compound threat detected.",
+  moralCheck:
+    "Deceptive or manipulative language detected. Rewrite with transparent intent.",
+  promptInjection:
+    "Soft prompt injection signals found — override-style imperative language from external input.",
+  piiLeakage:
+    "Personal data detected (SSN, credit card, phone, or email). Remove PII before sending to external services.",
+  identityCheck:
+    "Identity violation — the proposal attempts to impersonate a human or claim a false identity.",
+  toolRisk:
+    "This tool type carries inherent risk. Higher-risk tools (exec, network) receive additional scrutiny.",
+  "Intent not locked":
+    "No session intent has been declared. Set an intent lock so CORD can verify actions align with your goal.",
+  "Out of scope":
+    "This action falls outside the declared session scope (path, command, or network target not allowed).",
+};
+
+/**
+ * Generate a plain English explanation of a CORD verdict.
+ *
+ * @param {object} verdict  - Result from evaluateProposal()
+ * @returns {string}        - Human-readable explanation
+ */
+function explain(verdict) {
+  if (!verdict || !verdict.reasons || verdict.reasons.length === 0) {
+    return verdict?.decision === "ALLOW"
+      ? "Approved: no risk signals detected."
+      : "No specific risk signals identified.";
+  }
+
+  const lines = verdict.reasons.map((reason) => {
+    const explanation = EXPLANATIONS[reason];
+    return explanation || reason;
+  });
+
+  const prefix =
+    verdict.decision === "BLOCK"    ? "Blocked" :
+    verdict.decision === "CHALLENGE" ? "Needs approval" :
+    verdict.decision === "CONTAIN"  ? "Approved with monitoring" :
+    "Approved";
+
+  if (verdict.hardBlock) {
+    return lines[0]; // Hard blocks have a single, clear explanation
+  }
+
+  return `${prefix} (score ${verdict.score.toFixed(1)}):\n${lines.map((l) => `  • ${l}`).join("\n")}`;
+}
+
+/**
+ * Convenience: evaluate + explain in one call.
+ * Returns the full verdict with an added `explanation` field.
+ */
+function evaluate(input = {}) {
+  const verdict = evaluateProposal(input);
+  verdict.explanation = explain(verdict);
+  return verdict;
+}
+
 module.exports = {
   evaluateProposal,
+  evaluate,
+  explain,
   scoreProposal,
   // v1/v2 checks
   injectionRisk,
