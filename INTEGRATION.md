@@ -60,15 +60,15 @@ Hard blocks from Articles II (moral), VII (security), VIII (drift) bypass scorin
 | X — Temperament | `temperament_check` | 1 |
 | XI — Identity | `identity_check` | 1 |
 
-### CLI Wrapper (`api` script)
+### CLI Wrapper (`cord` command)
 The command mediator from the architecture page is now functional:
 ```bash
-./api git push origin main      # Routed through CORD
-./api rm -rf ~/junk             # BLOCKED
-./api --lock                    # Set intent lock
-./api --status                  # View lock status
-./api --log                     # View audit entries
-./api --verify                  # Verify chain integrity
+cord git push origin main       # Routed through CORD
+cord rm -rf ~/junk              # BLOCKED
+cord --lock                     # Set intent lock
+cord --status                   # View lock status
+cord --log                      # View audit entries
+cord --verify                   # Verify chain integrity
 ```
 
 ### Website Updates
