@@ -7,7 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  python:
+    name: Python CORD Engine
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -34,3 +35,23 @@ jobs:
         run: |
           echo '{"text":"git status"}' | python cord_engine/bridge.py
           echo '{"text":"rm -rf /","grants":["shell"]}' | python cord_engine/bridge.py
+
+  javascript:
+    name: JS CORD Engine
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        working-directory: cord
+        run: npm install
+
+      - name: Run JS CORD tests
+        working-directory: cord
+        run: npx jest --verbose
