@@ -122,11 +122,12 @@ Write a complete, precise implementation brief for this task. Include:
 4. Any imports or dependencies required
 5. How to verify the acceptance criteria are met
 
-Be specific. Write production-ready code. No placeholders.`;
+Be specific. Write production-ready code. No placeholders.
+IMPORTANT: Your response must be complete and not truncated. If writing a code file, include the ENTIRE file in ONE code block. Do not split across multiple blocks. Keep implementations concise but complete — no placeholder comments like "// rest of tests here".`;
 
   const message = await client.messages.create({
     model: "claude-opus-4-5",
-    max_tokens: 4096,
+    max_tokens: 8192,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }],
   });

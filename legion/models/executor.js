@@ -68,12 +68,16 @@ function runCommand(command, options = {}) {
 /**
  * Extract code blocks from a brief string (Claude output).
  * Returns an array of { language, code } objects.
+ * Handles both closed blocks (``` ... ```) and unclosed blocks
+ * (truncated responses where closing ``` never arrives).
  *
  * @param {string} text - Raw text potentially containing ```code blocks
  * @returns {Array<{language: string, code: string}>}
  */
 function extractCodeBlocks(text) {
   const blocks = [];
+
+  // Closed blocks first
   const re = /```(\w+)?\n([\s\S]*?)```/g;
   let match;
   while ((match = re.exec(text)) !== null) {
@@ -82,6 +86,20 @@ function extractCodeBlocks(text) {
       code: match[2].trim(),
     });
   }
+
+  // If no closed blocks found, look for an unclosed opening (truncated response)
+  if (blocks.length === 0) {
+    const openRe = /```(\w+)?\n([\s\S]+)$/;
+    const openMatch = text.match(openRe);
+    if (openMatch) {
+      blocks.push({
+        language: openMatch[1] || "text",
+        code: openMatch[2].trim(),
+        truncated: true,
+      });
+    }
+  }
+
   return blocks;
 }
 
