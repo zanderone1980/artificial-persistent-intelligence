@@ -246,6 +246,7 @@ function isCommandAllowed(proposal = "", scope) {
  *   { decision, score, risks, reasons, hardBlock, log_id }
  */
 function evaluateProposal(input = {}) {
+  if (input === null || input === undefined) input = {};
   const repoRoot = path.resolve(__dirname, "..");
   const text = input.proposal || input.text || "";
   const rawInput = input.rawInput || "";

@@ -40,6 +40,7 @@ const ZW_END = '\u200C\u200B'; // ZWNJ + ZWSP combination
  * @returns {string} Zero-width encoded string
  */
 function encodeZeroWidth(data) {
+  if (!data || typeof data !== 'string' || data.length === 0) return '';
   const bits = Buffer.from(data).toString('binary')
     .split('')
     .map(c => c.charCodeAt(0).toString(2).padStart(8, '0'))
@@ -53,6 +54,7 @@ function encodeZeroWidth(data) {
  * @returns {string|null} Decoded canary string, or null if not found
  */
 function detectZeroWidth(text) {
+  if (!text || typeof text !== 'string') return null;
   const startIdx = text.indexOf(ZW_START);
   const endMarker = text.indexOf(ZW_END);
   if (startIdx === -1 || endMarker === -1 || endMarker <= startIdx) return null;

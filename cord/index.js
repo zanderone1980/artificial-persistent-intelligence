@@ -50,6 +50,7 @@ try {
  * @returns {object} { decision, score, risks, reasons, hardBlock, log_id, explanation }
  */
 function evaluate(input) {
+  if (input === null || input === undefined) input = {};
   const normalized = typeof input === "string" ? { text: input } : input;
   const result = cordEngine.evaluateProposal(normalized);
   const explanation = explain(result, normalized.text || normalized.proposal || "");

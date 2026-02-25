@@ -197,6 +197,8 @@ def evaluate(
     Returns:
         A Verdict with decision, score, reasons, alternatives, and log reference.
     """
+    if proposal is None:
+        proposal = Proposal(text="")
     if repo_root is None:
         repo_root = str(Path(__file__).parent.parent.resolve())
 

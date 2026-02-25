@@ -31,7 +31,7 @@ class ActionType(Enum):
 @dataclass
 class Proposal:
     """A proposed action to be evaluated by CORD."""
-    text: str
+    text: str = ""
     action_type: str = "unknown"
     target_path: str | None = None
     network_target: str | None = None
@@ -42,6 +42,23 @@ class Proposal:
     tool_name: str = ""          # OpenClaw tool being called (exec, write, browser, etc.)
     source: str = "agent"        # Origin: "agent" | "external" | "user" | "tool_result"
     raw_input: str = ""          # Untrusted input being processed (for injection scanning)
+
+    def __post_init__(self) -> None:
+        # Coerce None fields to safe defaults — prevents crashes in downstream checks
+        if self.text is None:
+            self.text = ""
+        if self.session_intent is None:
+            self.session_intent = ""
+        if self.raw_input is None:
+            self.raw_input = ""
+        if self.tool_name is None:
+            self.tool_name = ""
+        if self.source is None:
+            self.source = "agent"
+        if self.grants is None:
+            self.grants = []
+        if self.context is None:
+            self.context = {}
 
     def to_dict(self) -> dict:
         return asdict(self)
