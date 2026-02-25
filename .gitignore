@@ -1,6 +1,7 @@
 # Runtime state — never commit these
 cord_engine/cord.log.jsonl
 cord_engine/intent.lock.json
+vigil/vigil-alerts.jsonl
 *.log.jsonl
 *.lock.json
 
