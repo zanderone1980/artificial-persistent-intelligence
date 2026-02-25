@@ -374,7 +374,7 @@ describe("explanation quality", () => {
       expect(result.explanation.icon).toBe("✅");
     } else {
       expect(result.decision).toBe("CHALLENGE");
-      expect(result.explanation.icon).toBe("⚠️");
+      expect(result.explanation.icon).toBe("🟠");
     }
   });
 

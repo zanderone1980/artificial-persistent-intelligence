@@ -335,12 +335,13 @@ describe('Vigil.plantCanary() and scanOutput()', () => {
     v.scanOutput(`leaked: ${tokens.honey}`);
   });
 
-  test('resetStats() clears canaries', () => {
+  test('resetStats() clears stats but preserves canaries', () => {
     v.plantCanary();
     expect(v.stats.canariesPlanted).toBe(1);
     v.resetStats();
     expect(v.stats.canariesPlanted).toBe(0);
-    expect(v.canaries.count).toBe(0);
+    // Canaries persist through stats reset — they are traps that must survive
+    expect(v.canaries.count).toBe(1);
   });
 
   test('canary not triggered without planting', () => {

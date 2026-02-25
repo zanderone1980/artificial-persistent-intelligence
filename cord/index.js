@@ -100,6 +100,12 @@ const session = {
 
   /** Verify a session passphrase. */
   verify: (passphrase) => verifyPassphrase(passphrase),
+
+  /** End the current session — removes the intent lock file. */
+  end() {
+    const fs = require("fs");
+    try { fs.unlinkSync(LOCK_PATH); } catch (e) { /* no lock to remove */ }
+  },
 };
 
 // ── Re-exports ────────────────────────────────────────────────────────────────

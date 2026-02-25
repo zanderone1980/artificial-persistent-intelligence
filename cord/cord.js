@@ -579,6 +579,10 @@ const EXPLANATIONS = {
     "Identity violation — the proposal attempts to impersonate a human or claim a false identity.",
   toolRisk:
     "This tool type carries inherent risk. Higher-risk tools (exec, network) receive additional scrutiny.",
+  financialRisk:
+    "Financial fraud risk — the proposal contains money transfer, payment, or wallet-related patterns.",
+  networkTargetRisk:
+    "Suspicious network target — the destination domain contains known-malicious indicators.",
   "Intent not locked":
     "No session intent has been declared. Set an intent lock so CORD can verify actions align with your goal.",
   "Out of scope":
@@ -652,4 +656,6 @@ module.exports = {
   piiRisk,
   identityRisk,
   toolRisk,
+  financialRisk,
+  networkTargetRisk,
 };

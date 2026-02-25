@@ -39,7 +39,7 @@ from .interceptor import (
     build_proposal,
 )
 
-__version__ = "2.2.0"
+__version__ = "4.0.0"
 __all__ = [
     # Core pipeline
     "evaluate",
