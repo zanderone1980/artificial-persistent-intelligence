@@ -5,8 +5,8 @@
  * Watch AI attacks get blocked in real-time
  */
 
-const { evaluate } = require('./cord');
-const { vigil } = require('./vigil/vigil');
+const { evaluate } = require('../cord');
+const { vigil } = require('../vigil/vigil');
 
 // Colors for terminal output
 const colors = {

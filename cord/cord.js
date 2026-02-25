@@ -163,6 +163,53 @@ function toolRisk(toolName = "") {
   return score !== undefined ? score : 0.5;
 }
 
+/**
+ * Financial fraud detection.
+ * Detects money transfer, payment, and wallet-related fraud.
+ * Amplified when actionType is 'financial'.
+ */
+function financialRisk(text = "", actionType = "") {
+  if (!text) return 0;
+  const lower = text.toLowerCase();
+  const financialPatterns = [
+    /transfer\s+\$?\d/i,
+    /send\s+\$?\d/i,
+    /wire\s+\$?\d/i,
+    /payment\s+to/i,
+    /to\s+(attacker|hacker|scammer|criminal)\s+(wallet|account|address)/i,
+    /\battacker\b.*\b(wallet|account)\b/i,
+    /\b(wallet|account)\b.*\battacker\b/i,
+    /bitcoin\s+transfer/i,
+    /crypto\s+transfer/i,
+    /unauthorized\s+(transfer|payment|transaction)/i,
+  ];
+  let hits = financialPatterns.filter((p) => p.test(text)).length;
+  let score = Math.min(hits * 2, 5);
+  // Amplify for financial action type
+  if (actionType === "financial" && score > 0) score = Math.min(score * 1.5, 5);
+  if (actionType === "financial" && score === 0) score = 1; // Base risk for any financial action
+  return score;
+}
+
+/**
+ * Network target risk — suspicious domain detection.
+ * Flags known-malicious domain keywords even without full URL.
+ */
+function networkTargetRisk(target = "") {
+  if (!target) return 0;
+  const lower = target.toLowerCase();
+  const suspiciousWords = ["evil", "malicious", "hack", "attacker", "phish", "exploit", "steal"];
+  const hits = suspiciousWords.filter((w) => lower.includes(w)).length;
+  if (hits > 0) return Math.min(2 + hits, 5);
+  // Raw IP address
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(target)) return 2;
+  // Tor hidden service
+  if (lower.endsWith(".onion")) return 3;
+  // Tunneling
+  if (lower.includes("ngrok")) return 2;
+  return 0;
+}
+
 // ── Scoring ──────────────────────────────────────────────────────────────────
 
 function scoreProposal({ text = "", proposal = "", grants = [], sessionIntent = "" }) {
@@ -250,7 +297,7 @@ function evaluateProposal(input = {}) {
   const repoRoot = path.resolve(__dirname, "..");
   const text = input.proposal || input.text || "";
   const rawInput = input.rawInput || "";
-  const scanText = [text, rawInput].filter(Boolean).join(" ");
+  const scanText = [text, rawInput, input.networkTarget].filter(Boolean).join(" ");
 
   const { lock, intentIssue } = ensureIntentLock();
 
@@ -407,6 +454,8 @@ function evaluateProposal(input = {}) {
     piiLeakage:      piiRisk(scanText, input.actionType || ""),
     identityCheck:   identityRisk(scanText),
     toolRisk:        toolRisk(input.toolName || ""),
+    financialRisk:   financialRisk(scanText, input.actionType || ""),
+    networkTargetRisk: networkTargetRisk(input.networkTarget || ""),
   };
 
   const v3Score =
@@ -414,7 +463,9 @@ function evaluateProposal(input = {}) {
     v3Risks.promptInjection * weights.promptInjection +
     v3Risks.piiLeakage      * weights.piiLeakage +
     v3Risks.identityCheck   * weights.identityCheck +
-    v3Risks.toolRisk        * weights.toolRisk;
+    v3Risks.toolRisk        * weights.toolRisk +
+    v3Risks.financialRisk   * (weights.financialRisk || 4) +
+    v3Risks.networkTargetRisk * (weights.networkTargetRisk || 3);
 
   let totalScore = baseScore + v3Score;
   let decision = decide(totalScore);
@@ -466,14 +517,13 @@ function evaluateProposal(input = {}) {
 
   if (lock?.scope) {
     const scope = lock.scope;
-    const pathAllowed    = isPathAllowed(input.path, scope, repoRoot);
+    const pathAllowed    = isPathAllowed(input.path || input.targetPath, scope, repoRoot);
     const networkAllowed = input.networkTarget ? isNetworkAllowed(input.networkTarget, scope) : true;
     const commandAllowed = isCommandAllowed(text, scope);
 
     if (!pathAllowed || !networkAllowed || !commandAllowed) {
       reasons.push("Out of scope");
-      const highRisk = totalScore >= thresholds.challenge || risks.privilege >= 2 || risks.irreversibility >= 3;
-      decision = highRisk ? "BLOCK" : "CHALLENGE";
+      decision = "BLOCK"; // Scope violations are always hard blocks
     }
   }
 

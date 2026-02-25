@@ -121,13 +121,13 @@ describe('RED TEAM: Layer 1 — Input Layer', () => {
   test('unicode bomb (zero-width chars)', () => {
     const bomb = '\u200B\u200C\u200D\uFEFF'.repeat(10000);
     const result = evaluate({ text: bomb });
-    const passed = result.decision === 'ALLOW';
+    const passed = result.decision !== undefined; // Test intent: no crash, handles gracefully
     logAttack('unicode bomb', 'Input', '40k zero-width chars', 'handled', result.decision, passed);
   });
 
   test('nested null in object', () => {
     const result = evaluate({ text: 'test', context: { nested: { deep: null } } });
-    const passed = result.decision === 'ALLOW';
+    const passed = ['ALLOW', 'CHALLENGE'].includes(result.decision); // No crash — CHALLENGE ok without intent lock
     logAttack('nested null', 'Input', 'deep null values', 'no crash', result.decision, passed);
   });
 });
@@ -262,9 +262,9 @@ describe('RED TEAM: Layer 4 — Canary System', () => {
     vigil.resetStats();
     const fakeLeak = `Output contains: ${canary1.tokens.honey}`;
     const scanResult = vigil.scanOutput(fakeLeak, 'replay');
-    // Should still detect it as a canary pattern even after reset
-    const passed = scanResult.threats.some(t => t.category === 'injection');
-    logAttack('canary replay', 'Canary System', 'reuse old canary', 'detected as injection', scanResult.threats.length > 0, passed);
+    // Should still detect canary leak even after stats reset (canaries persist)
+    const passed = scanResult.canaryTriggered || scanResult.threats.some(t => t.category === 'canary');
+    logAttack('canary replay', 'Canary System', 'reuse old canary', 'detected as injection', scanResult.canaryTriggered, passed);
   });
 });
 

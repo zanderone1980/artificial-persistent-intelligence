@@ -327,7 +327,7 @@ class Vigil extends EventEmitter {
       indirectInjections: 0,
     };
     this.memory.clear();
-    this.canaries.clear();
+    // Note: canaries are NOT cleared on stats reset — they are traps that persist
     this.proactive.clear();
   }
 }

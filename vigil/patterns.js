@@ -7,7 +7,7 @@ const patterns = {
   // ── Prompt injection attempts ───────────────────────────────────────────
   injection: [
     /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|rules?|context)/gi,
-    /disregard\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|rules?)/gi,
+    /disregard\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|rules?|directives?|orders?|guidelines?|policies?)/gi,
     /forget\s+(all\s+)?(everything|your\s+(instructions?|rules?|prompts?))/gi,
     /system\s+prompt/gi,
     /reveal\s+(the\s+)?(system|hidden|original)\s+(prompt|instructions?|rules?)/gi,
@@ -28,6 +28,9 @@ const patterns = {
     /\[INST\]|\[\/INST\]/g, // Instruction markers
     /\[SYSTEM\]/gi,         // System block injection
     /###\s*(system|instruction)/gi,
+    /bypass\s+(all\s+)?(restrictions?|safeguards?|security|safety|protections?|filters?)/gi,
+    /give\s+me\s+(admin|root|system|superuser)\s+access/gi,
+    /ignore\s+(all\s+)?(security|safety|safeguards?|protections?)/gi,
   ],
 
   // ── Data exfiltration attempts ──────────────────────────────────────────
