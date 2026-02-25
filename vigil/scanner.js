@@ -69,8 +69,6 @@ function scan(text) {
   let decision;
   if (hasCriticalThreat || severity >= config.thresholds.block) {
     decision = 'BLOCK';
-  } else if (severity >= config.thresholds.challenge + 1) {
-    decision = 'CHALLENGE';
   } else if (severity > config.thresholds.allow) {
     decision = 'CHALLENGE';
   } else {

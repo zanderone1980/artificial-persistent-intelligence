@@ -37,7 +37,7 @@ jobs:
           echo '{"text":"rm -rf /","grants":["shell"]}' | python cord_engine/bridge.py
 
   javascript:
-    name: JS CORD Engine
+    name: JS CORD + VIGIL
     runs-on: ubuntu-latest
 
     steps:
@@ -52,6 +52,11 @@ jobs:
         working-directory: cord
         run: npm install
 
-      - name: Run JS CORD tests
-        working-directory: cord
-        run: npx jest --verbose
+      - name: Run CORD tests
+        run: npx jest cord/cord.test.js --verbose
+
+      - name: Run VIGIL tests
+        run: npx jest vigil/vigil.test.js --verbose
+
+      - name: Run VIGIL inline tests
+        run: node vigil/vigil.js --test

@@ -99,7 +99,7 @@ Open source. MIT license. 252 tests.
 
 github.com/zanderone1980/artificial-persistent-intelligence
 
-npm install cord-engine coming next.
+`npm install cord-engine` — it's live right now. Zero dependencies.
 
 Built this because I couldn't find anything like it. Turns out there wasn't anything like it.
 
@@ -154,7 +154,7 @@ hard block toast alerts, tamper-evident audit trail.
 **252 tests passing** (Python + JavaScript engines).
 
 Python: `pip install cord-engine` (v2.2 on PyPI)
-JS: npm package coming this week
+JS: `npm install cord-engine` (v3.0.2, zero dependencies)
 
 GitHub: https://github.com/zanderone1980/artificial-persistent-intelligence
 
