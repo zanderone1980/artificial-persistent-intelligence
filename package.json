@@ -1,6 +1,6 @@
 {
   "name": "cord-engine",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "The AI that polices itself. 40 attack vectors blocked. Constitutional enforcement + threat detection. Battle-tested, zero dependencies.",
   "main": "cord/index.js",
   "bin": {
