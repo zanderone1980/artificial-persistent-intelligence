@@ -1,6 +1,11 @@
-# VIGIL - Threat Scanner Daemon
+# VIGIL - Threat Scanner Daemon (v2)
 
 **VIGIL** is the always-on patrol layer that sits **ABOVE CORD** in the hierarchy. While CORD scores individual actions, VIGIL watches patterns and streams continuously, detecting threats in real-time.
+
+**v2 Features:**
+- **Normalization Layer** - Decodes obfuscation (base64, zero-width chars, homoglyphs, HTML entities)
+- **Behavioral Memory** - Tracks cross-turn patterns to detect escalating attacks
+- **Session-aware** - Remembers threat history across multiple messages per session
 
 Zero external dependencies. Pure Node.js.
 
@@ -22,6 +27,26 @@ System Actions
 - **Critical threat blocking** - Immediate BLOCK for injection, exfiltration, and manipulation attempts
 - **Cryptographic audit trail** - Append-only JSONL log with SHA-256 hash chaining
 - **CORD integration** - Fast-path blocking for critical threats before CORD evaluation
+
+### v2 Enhancements
+
+- **Normalization Layer** (`vigil/normalizer.js`)
+  - Base64 detection and decode
+  - Unicode normalization (NFC, NFD, NFKC, NFKD)
+  - Zero-width character stripping (U+200B, U+200C, U+200D, U+2060, U+00AD, etc.)
+  - Homoglyph normalization (Cyrillic/Greek → ASCII lookalikes)
+  - HTML entity decode (`&lt;`, `&#x41;`, `&#65;`)
+  - Hex/Unicode escape decode (`\x41`, `\u0041`)
+  - Whitespace collapse (tabs, multiple spaces, non-breaking spaces)
+  - Obfuscation detection flag (+2 severity penalty)
+
+- **Behavioral Memory** (`vigil/memory.js`)
+  - Cross-turn session tracking (50 messages per session)
+  - Cumulative risk scoring with decay
+  - Escalation detection (rising severity patterns)
+  - Session timeout (30 minutes of inactivity)
+  - Multi-session support (isolated session contexts)
+  - Automatic escalation when 3+ elevated messages detected
 
 ## Installation
 

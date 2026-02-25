@@ -1,9 +1,14 @@
 /**
  * VIGIL Scanner - Threat Analysis Engine
- * Scans text for threats and returns severity assessment
+ * Scans text for threats and returns severity assessment.
+ *
+ * v2: Normalizes text before scanning — base64 decode, unicode NFKC,
+ *     zero-width strip, homoglyph collapse, HTML entity decode, escape decode.
+ *     Patterns now run against the deobfuscated combined text.
  */
 
 const { patterns, categoryWeights, criticalCategories } = require('./patterns');
+const { normalize } = require('./normalizer');
 const config = require('./config');
 
 /**
@@ -26,17 +31,22 @@ function scan(text) {
     text = text.substring(0, config.scanner.maxTextLength);
   }
 
+  // ── Normalize: decode obfuscation layers before scanning ───────────────
+  const { combined, decodedLayers } = normalize(text);
+  const scanTarget = combined; // Scan against original + decoded layers
+
   const threats = [];
   const detectedCategories = new Set();
   let totalScore = 0;
   let hasCriticalThreat = false;
+  const wasObfuscated = decodedLayers.length > 0;
 
   // Scan each category
   for (const [category, regexList] of Object.entries(patterns)) {
     const categoryMatches = [];
 
     for (const regex of regexList) {
-      const matches = text.match(regex);
+      const matches = scanTarget.match(regex);
       if (matches) {
         categoryMatches.push(...matches.map(m => m.trim()));
       }
@@ -62,6 +72,11 @@ function scan(text) {
     }
   }
 
+  // Obfuscation amplifier — threats hidden behind encoding are more suspicious
+  if (wasObfuscated && threats.length > 0) {
+    totalScore = Math.ceil(totalScore * 1.5);
+  }
+
   // Normalize severity to 0-10 scale
   const severity = Math.min(10, Math.round(totalScore / Math.max(1, detectedCategories.size)));
 
@@ -84,6 +99,7 @@ function scan(text) {
     threats,
     summary,
     hasCriticalThreat,
+    wasObfuscated,
   };
 }
 
