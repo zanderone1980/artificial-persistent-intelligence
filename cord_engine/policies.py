@@ -3,7 +3,7 @@
 import re
 
 # ---------------------------------------------------------------------------
-# Dimension weights — how heavily each constitutional dimension is scored.
+# Dimension weights — how heavily each protocol dimension is scored.
 # Higher weight = more influence on the final composite score.
 # ---------------------------------------------------------------------------
 WEIGHTS = {

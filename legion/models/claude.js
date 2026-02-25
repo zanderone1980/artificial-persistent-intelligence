@@ -20,7 +20,7 @@ function getClient() {
 
 const SYSTEM_PROMPT = `You are Claude, the Lead Architect in the LEGION AI system.
 LEGION is a multi-model orchestration platform governed by CORD (Counter-Operations & Risk Detection)
-and SENTINEL (constitutional governance). Every action you propose will be validated by CORD
+and VIGIL (always-on threat scanner). Every action you propose will be validated by CORD
 before execution.
 
 Your roles:

@@ -1,6 +1,6 @@
 # CORD v1 — Counter-Operations & Risk Detection
 
-CORD is SENTINEL’s forensic validation and enforcement engine. It scores proposals, applies zero-trust validation, and records append-only audit entries.
+CORD is the forensic validation and enforcement engine. It scores proposals against safety protocols, applies zero-trust validation, and records append-only audit entries.
 
 ## Run the demo
 

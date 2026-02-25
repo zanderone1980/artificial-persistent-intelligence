@@ -1,11 +1,11 @@
 /**
  * CORD v3 — Counter-Operations & Risk Detection (JavaScript)
  *
- * Aligned with the Python cord_engine constitutional architecture.
- * 14-check pipeline covering all 11 SENTINEL articles.
+ * Aligned with the Python cord_engine protocol architecture.
+ * 14-check pipeline covering all 11 CORD protocols.
  *
  * New in v3:
- *   - Hard blocks: moral violations, prompt injection, constitutional drift
+ *   - Hard blocks: moral violations, prompt injection, protocol drift
  *     bypass the scoring engine and trigger immediate BLOCK
  *   - Prompt injection detection (Article VII extension)
  *   - PII leakage detection (Article VII extension)
@@ -74,7 +74,7 @@ function anomalyRisk(risks) {
   return 0;
 }
 
-// ── v3 constitutional checks ─────────────────────────────────────────────────
+// ── v3 protocol checks ──────────────────────────────────────────────────────
 
 /**
  * Article II — Moral Constraints
@@ -94,7 +94,7 @@ function moralRisk(text = "") {
 
 /**
  * Article VIII — Learning & Adaptation
- * Constitutional drift: attempts to bypass, override, or disable CORD/SENTINEL.
+ * Protocol drift: attempts to bypass, override, or disable CORD.
  * Hard-block on any match.
  */
 function driftRisk(text = "") {
@@ -329,7 +329,7 @@ function evaluateProposal(input = {}) {
   }
 
   // ── Phase 1: Hard-block checks (bypass scoring entirely) ─────────────────
-  // These are constitutional violations that cannot be un-done by score weighting.
+  // These are protocol violations that cannot be un-done by score weighting.
 
   const moral = moralRisk(scanText);
   if (moral.hardBlock) {
@@ -357,7 +357,7 @@ function evaluateProposal(input = {}) {
       decision: "BLOCK",
       score: 99,
       risks: { driftCheck: 5 },
-      reasons: ["HARD BLOCK — constitutional drift attempt (Article VIII)"],
+      reasons: ["HARD BLOCK — protocol drift attempt (Protocol VIII)"],
       proposal: text,
       path: input.path || null,
       networkTarget: input.networkTarget || null,
@@ -366,7 +366,7 @@ function evaluateProposal(input = {}) {
     return {
       decision: "BLOCK", score: 99,
       risks: { driftCheck: 5 },
-      reasons: ["HARD BLOCK — constitutional drift attempt (Article VIII)"],
+      reasons: ["HARD BLOCK — protocol drift attempt (Protocol VIII)"],
       hardBlock: true, log_id,
     };
   }
@@ -501,7 +501,7 @@ const EXPLANATIONS = {
   // Hard blocks
   "HARD BLOCK — moral violation (Article II)":
     "Blocked: this proposal contains a pattern associated with fraud, extortion, or coercion. Remove the threatening or deceptive language to proceed.",
-  "HARD BLOCK — constitutional drift attempt (Article VIII)":
+  "HARD BLOCK — protocol drift attempt (Protocol VIII)":
     "Blocked: this proposal attempts to bypass, override, or disable safety checks. CORD cannot be turned off by the agent it governs.",
   "HARD BLOCK — prompt injection attempt (Article VII)":
     "Blocked: this proposal contains a prompt injection pattern — an attempt to hijack the agent's instructions. The input has been quarantined.",

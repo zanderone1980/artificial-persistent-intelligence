@@ -1,4 +1,4 @@
-"""CORD constitutional checks — each SENTINEL article as an evaluable constraint.
+"""CORD protocol checks — each protocol as an evaluable constraint.
 
 Every function takes a Proposal and returns a CheckResult.
 Hard blocks bypass the scoring engine entirely.
@@ -161,7 +161,7 @@ def check_sustainability(proposal: Proposal) -> CheckResult:
 
     if proposal.context.get("burnout_risk"):
         score += 1.5
-        reasons.append("Burnout risk flagged — SENTINEL builds people up, never burns them out")
+        reasons.append("Burnout risk flagged — CORD builds people up, never burns them out")
 
     return CheckResult(
         dimension="sustainability_check",
@@ -269,14 +269,14 @@ def check_drift(proposal: Proposal) -> CheckResult:
     text = proposal.text.lower()
 
     drift_signals = [
-        "override constitution", "ignore rules", "bypass policy",
-        "disable safety", "turn off checks", "skip validation",
-        "modify core values", "change the rules",
+        "override constitution", "override protocols", "ignore rules",
+        "bypass policy", "disable safety", "turn off checks",
+        "skip validation", "modify core values", "change the rules",
     ]
     for signal in drift_signals:
         if signal in text:
             score += 3.0
-            reasons.append(f"Constitutional drift attempt: '{signal}' — Articles I-III are immutable")
+            reasons.append(f"Protocol drift attempt: '{signal}' — Protocols I-III are immutable")
             return CheckResult(
                 dimension="drift_check",
                 article="Article VIII — Learning & Adaptation",
@@ -381,7 +381,7 @@ def check_identity(proposal: Proposal) -> CheckResult:
     if match:
         score += 3.0
         reasons.append(
-            f"Identity violation: '{match.group(0)}' — SENTINEL knows what it is"
+            f"Identity violation: '{match.group(0)}' — CORD knows what it is"
         )
 
     return CheckResult(
@@ -550,5 +550,5 @@ ALL_CHECKS = [
 
 
 def run_all_checks(proposal: Proposal) -> list[CheckResult]:
-    """Execute every constitutional check against a proposal."""
+    """Execute every protocol check against a proposal."""
     return [check(proposal) for check in ALL_CHECKS]

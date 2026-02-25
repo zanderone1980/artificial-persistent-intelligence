@@ -9,7 +9,7 @@ description = "CORD — Counter-Operations & Risk Detection. Constitutional AI g
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
-keywords = ["ai", "safety", "governance", "sentinel", "cord", "constitutional-ai"]
+keywords = ["ai", "safety", "governance", "vigil", "cord", "protocol-enforcement"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",

@@ -3,7 +3,7 @@ cord_engine/
 tests/
 legion/
 openclaw-skill/
-sentinel/
+vigil/
 dist/
 node_modules/
 *.egg-info/

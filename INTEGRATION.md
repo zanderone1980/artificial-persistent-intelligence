@@ -1,4 +1,4 @@
-# SENTINEL / CORD Integration Notes
+# CORD Integration Notes
 
 **For sharing context with partner Claude on claude.ai**
 
@@ -6,7 +6,7 @@
 
 ## What Was Built
 
-### SENTINEL Constitution V2 (`SENTINEL_Constitution_V2.md`)
+### CORD Protocols (`CORD_Protocols.md`)
 - All 11 original articles preserved with full philosophical text
 - Each article now has a **Technical Specification** table mapping it to a CORD dimension
 - New **Article XII** — full CORD engine technical specification
@@ -20,7 +20,7 @@ cord_engine/
   __init__.py        — Public API (evaluate, Proposal, Verdict, etc.)
   models.py          — Data classes: Proposal, Verdict, Decision, CheckResult
   policies.py        — Weights, thresholds, regex patterns, verb lists
-  constitution.py    — All 11 articles as callable check functions
+  protocols.py       — All 11 protocols as callable check functions
   scoring.py         — Weighted composite scoring with anomaly amplification
   engine.py          — The 9-step CORD pipeline
   intent_lock.py     — Session intent binding with SHA-256 passphrase
@@ -32,7 +32,7 @@ cord_engine/
 
 **The 9-Step Pipeline:**
 ```
-NORMALIZE → AUTHENTICATE → SCOPE CHECK → INTENT MATCH → CONSTITUTIONAL CHECK → RISK SCORE → DECISION → AUDIT → VERDICT
+NORMALIZE → AUTHENTICATE → SCOPE CHECK → INTENT MATCH → PROTOCOL CHECK → RISK SCORE → DECISION → AUDIT → VERDICT
 ```
 
 **Decision Outcomes:**
@@ -72,7 +72,7 @@ cord --verify                   # Verify chain integrity
 ```
 
 ### Website Updates
-- `wolf.html` — Added CORD v2 pipeline visualization, decision outcomes, constitutional coverage cards, CLI usage section
+- `wolf.html` — Added CORD v2 pipeline visualization, decision outcomes, protocol coverage cards, CLI usage section
 
 ---
 
@@ -81,10 +81,10 @@ cord --verify                   # Verify chain integrity
 1. **CORD name kept as "Counter-Operations & Risk Detection"** — the original name from v1
 2. **Python engine is standalone** — no external dependencies, standard library only
 3. **JS engine (`cord/`) left intact** — serves as the v1 reference implementation
-4. **Constitutional checks are modular** — each article is a separate function, easy to extend
-5. **Hard blocks are immutable** — Articles II, VII, VIII can trigger instant BLOCK regardless of composite score
+4. **Protocol checks are modular** — each protocol is a separate function, easy to extend
+5. **Hard blocks are immutable** — Protocols II, VII, VIII can trigger instant BLOCK regardless of composite score
 6. **Audit log uses hash chaining** — each entry's hash includes the previous entry's hash, making tampering detectable
-7. **Intent lock is required** — without one, SENTINEL operates in restricted mode with elevated risk scores
+7. **Intent lock is required** — without one, CORD operates in restricted mode with elevated risk scores
 8. **Anomaly amplification** — when multiple dimensions flag high risk simultaneously, the composite score is amplified (+1 to +3)
 
 ---
@@ -123,7 +123,7 @@ print(verdict.to_json())       # Full structured result
 
 ## What's Next
 
-- Integration with the SENTINEL Partner Loop (Observe → Assess → Decide → Plan → Request → Act → Measure → Learn)
+- Integration with the CORD Partner Loop (Observe → Assess → Decide → Plan → Request → Act → Measure → Learn)
 - Real-time monitoring mode for CORD
 - Persistent user model storage (encrypted)
 - Cloud acceleration gateway with zero-trust mediation

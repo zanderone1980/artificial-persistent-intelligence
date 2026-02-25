@@ -1,7 +1,7 @@
 """CORD — Counter-Operations & Risk Detection.
 
-Constitutional AI governance engine for autonomous agents.
-Evaluates proposed actions against a configurable constitution,
+AI governance engine for autonomous agents.
+Evaluates proposed actions against configurable protocols,
 enforcing safety at the framework level.
 
 Usage (evaluate directly):

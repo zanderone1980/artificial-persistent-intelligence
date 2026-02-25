@@ -5,7 +5,7 @@ The 9-step evaluation pipeline:
   2. Authenticate — verify intent lock exists
   3. Scope Check — target within allowed boundaries?
   4. Intent Match — proposal aligned with declared intent?
-  5. Constitutional Check — evaluate against all 11 articles
+  5. Protocol Check — evaluate against all 11 protocols
   6. Risk Score  — weighted composite from all dimensions
   7. Decision    — map score to ALLOW / CHALLENGE / CONTAIN / BLOCK
   8. Audit       — write to append-only hash-chained log
@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .models import Proposal, Verdict, Decision, CheckResult
-from .constitution import run_all_checks
+from .protocols import run_all_checks
 from .scoring import (
     compute_composite_score,
     detect_anomaly,
@@ -252,11 +252,11 @@ def evaluate(
             hard_block=rate_exceeded and rate_per_min > 60,
         )
 
-    # ── Step 5: Constitutional Check ──
-    constitutional_results = run_all_checks(proposal)
+    # ── Step 5: Protocol Check ──
+    protocol_results = run_all_checks(proposal)
 
     # Combine all check results
-    all_results: list[CheckResult] = list(constitutional_results)
+    all_results: list[CheckResult] = list(protocol_results)
     if auth_result:
         all_results.append(auth_result)
     if scope_result:

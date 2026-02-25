@@ -7,7 +7,7 @@ Instead of running commands directly, route them through CORD:
     cord rm -rf ~/Downloads/junk
     cord pip install requests
 
-CORD evaluates the command against the SENTINEL Constitution,
+CORD evaluates the command against its safety protocols,
 then either ALLOWs, CONTAINs, CHALLENGEs, or BLOCKs execution.
 
 Usage:
@@ -239,7 +239,7 @@ def cmd_evaluate_and_run(args: list[str]):
             sys.exit(1)
 
     elif verdict.decision == Decision.BLOCK:
-        print(f"\n  {RED}BLOCKED — this action violates the SENTINEL Constitution.{RESET}")
+        print(f"\n  {RED}BLOCKED — this action violates CORD safety protocols.{RESET}")
         print(f"  {DIM}The command was not executed.{RESET}")
         sys.exit(1)
 

@@ -66,7 +66,7 @@ class Proposal:
 
 @dataclass
 class CheckResult:
-    """Result from a single constitutional check."""
+    """Result from a single protocol check."""
     dimension: str
     article: str
     score: float  # 0 = clean, higher = riskier

@@ -1,7 +1,7 @@
 /**
  * CORD v3 policy configuration
  * Weights, thresholds, patterns, and risk tiers.
- * Aligned with the Python cord_engine (14-check constitutional engine).
+ * Aligned with the Python cord_engine (14-check protocol engine).
  */
 
 module.exports = {
@@ -14,7 +14,7 @@ module.exports = {
     intentDrift:          3,
     irreversibility:      4,
     anomaly:              2,
-    // Constitutional additions (v3)
+    // Protocol additions (v3)
     moralCheck:           5,   // Art II — highest weight, hard-block capable
     promptInjection:      5,   // Art VII ext — AI hijack attempt
     driftCheck:           4,   // Art VIII — bypass/override attempts
@@ -40,8 +40,8 @@ module.exports = {
     // Article II — moral hard-block patterns
     moralBlock: /(steal|fraud|blackmail|extort|coerce|impersonate|forge|counterfeit|phish|exploit\s+vuln|hack\s+into|breach\s+security|harm\s+\w+|threaten|deceive\s+\w+|manipulate\s+\w+|pretend\s+to\s+be\s+(a\s+)?human|as\s+if\s+i\s+am\b|as\s+if\s+you\s+are\b|pose\s+as|masquerade\s+as|the\s+human\s+owner|acting\s+as\s+the\s+human|unless\s+(they|you|he|she|we|i)\s+(pay|comply|agree|cooperate|transfer)|compromising\s+(photos?|images?|videos?|materials?|info|information|data|documents?|evidence)|(leak|release|expose|publish|send)\s+.{0,30}(unless|or\s+else|if\s+not))/i,
 
-    // Article VIII — constitutional drift / bypass attempts
-    drift: /(override\s+constitution|ignore\s+rules|bypass\s+policy|disable\s+safety|turn\s+off\s+checks|skip\s+validation|modify\s+core\s+values|change\s+the\s+rules|disable\s+cord|bypass\s+cord|override\s+sentinel)/i,
+    // Protocol VIII — protocol drift / bypass attempts
+    drift: /(override\s+(constitution|protocols?)|ignore\s+rules|bypass\s+policy|disable\s+safety|turn\s+off\s+checks|skip\s+validation|modify\s+core\s+values|change\s+the\s+rules|disable\s+cord|bypass\s+cord|override\s+sentinel)/i,
 
     // Article XI — identity violations
     identity: /(pretend\s+to\s+be\s+(a\s+)?human|as\s+if\s+i\s+am\b|as\s+if\s+you\s+are\b|\bimpersonate\b|claim\s+to\s+be|pose\s+as|masquerade\s+as|the\s+human\s+owner|acting\s+as\s+the\s+human|respond.*as.*human|present.*as.*human)/i,

@@ -17,8 +17,8 @@ const DIMENSION_EXPLANATIONS = {
     fix: "Remove override phrases like 'ignore previous instructions', 'you are now', or jailbreak mode requests.",
   },
   driftCheck: {
-    short: "Constitutional drift",
-    message: "This proposal attempts to bypass or disable CORD/SENTINEL constitutional checks.",
+    short: "Protocol drift",
+    message: "This proposal attempts to bypass or disable CORD safety protocols.",
     fix: "Remove references to overriding safety rules, disabling checks, or modifying core values.",
   },
   injection: {
@@ -115,7 +115,7 @@ function explain(result, proposalPreview = "") {
   // Top-level summary
   let summary;
   if (result.hardBlock) {
-    summary = `Hard block — constitutional violation. This action is prohibited regardless of context or score.`;
+    summary = `Hard block — protocol violation. This action is prohibited regardless of context or score.`;
   } else if (result.decision === "ALLOW") {
     summary = `This proposal passed all CORD checks and is approved for execution.`;
   } else if (result.decision === "CONTAIN") {
