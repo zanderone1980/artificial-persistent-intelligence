@@ -28,6 +28,16 @@ const mw          = require("./middleware");
 const { setIntentLock, loadIntentLock, verifyPassphrase, LOCK_PATH } = require("./intentLock");
 const { appendLog, LOG_PATH } = require("./logger");
 
+// ── Optional VIGIL access ───────────────────────────────────────────────────
+// VIGIL is wired into evaluateProposal() in cord.js as Phase 0.
+// We re-export it here for direct access if needed.
+let vigilDaemon = null;
+try {
+  vigilDaemon = require("../vigil/vigil").vigil;
+} catch (e) {
+  // VIGIL not available
+}
+
 // ── Core evaluation ───────────────────────────────────────────────────────────
 
 /**
@@ -108,6 +118,9 @@ module.exports = {
 
   // Raw engine (for advanced use)
   engine: cordEngine,
+
+  // VIGIL (always-on patrol — null if not installed)
+  vigil: vigilDaemon,
 
   // Logging
   LOG_PATH,

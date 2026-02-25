@@ -5,6 +5,9 @@
 
 const path = require("path");
 
+// Mock VIGIL away — these are CORD unit tests (VIGIL integration tested in cord-vigil.test.js)
+jest.mock("../vigil/vigil", () => null);
+
 // Mock logger to avoid writing to real log files
 jest.mock("./logger", () => ({
   appendLog: jest.fn(() => "mock_log_id"),

@@ -59,9 +59,10 @@ function extractAnthropicText(params = {}) {
  * @param {string} [options.actionType]     — Action classification
  * @param {boolean} [options.throwOnBlock]  — Throw an error on BLOCK (default: true)
  * @param {boolean} [options.silent]        — Suppress console output (default: false)
+ * @param {boolean} [options.useVigil]      — Run VIGIL pre-scan (default: true if available)
  */
 async function evaluate(text, options = {}) {
-  const { sessionIntent = "", toolName = "", actionType = "", throwOnBlock = true, silent = false } = options;
+  const { sessionIntent = "", toolName = "", actionType = "", throwOnBlock = true, silent = false, useVigil } = options;
 
   const result = evaluateProposal({
     text,
@@ -69,6 +70,7 @@ async function evaluate(text, options = {}) {
     toolName,
     actionType,
     rawInput: text,
+    useVigil,
   });
 
   const explanation = explain(result, text);

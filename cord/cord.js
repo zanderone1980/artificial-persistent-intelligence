@@ -21,6 +21,16 @@ const { weights, thresholds, regex, highImpactVerbs, allowlistKeywords, toolRisk
 const { appendLog } = require("./logger");
 const { loadIntentLock } = require("./intentLock");
 
+// ── Optional VIGIL integration ──────────────────────────────────────────────
+// VIGIL sits ABOVE CORD — always-on patrol that catches critical threats
+// before the CORD pipeline runs. Optional: works without VIGIL installed.
+let vigilModule = null;
+try {
+  vigilModule = require("../vigil/vigil");
+} catch (e) {
+  // VIGIL not available (npm-only install) — CORD works standalone
+}
+
 // ── Original 6 risk checks (v1/v2) ──────────────────────────────────────────
 
 function injectionRisk(text = "") {
@@ -243,6 +253,46 @@ function evaluateProposal(input = {}) {
 
   const { lock, intentIssue } = ensureIntentLock();
 
+  // ── Phase 0: VIGIL pre-scan (if available) ──────────────────────────────
+  // VIGIL is the outer patrol layer. If it detects a critical threat,
+  // we skip the entire CORD pipeline — no score, no scope check, just BLOCK.
+  // If it finds suspicious (CHALLENGE) content, we amplify CORD's score.
+  let vigilResult = null;
+  if (vigilModule && input.useVigil !== false) {
+    const v = vigilModule.vigil;
+    if (!v.running) v.start();
+    try {
+      vigilResult = v.scan(scanText);
+    } catch (e) {
+      // VIGIL error — proceed without it
+      vigilResult = null;
+    }
+
+    if (vigilResult && vigilResult.decision === "BLOCK") {
+      const reasons = ["VIGIL BLOCK — " + (vigilResult.summary || "critical threat detected")];
+      if (vigilResult.escalatedBy === "memory") {
+        reasons.push("Escalated by behavioral memory (cross-turn pattern)");
+      }
+      const log_id = appendLog({
+        decision: "BLOCK",
+        score: 99,
+        risks: { vigilBlock: true, vigilSeverity: vigilResult.severity },
+        reasons,
+        proposal: text,
+        path: input.path || null,
+        networkTarget: input.networkTarget || null,
+        hardBlock: true,
+      });
+      return {
+        decision: "BLOCK", score: 99,
+        risks: { vigilBlock: true, vigilSeverity: vigilResult.severity },
+        reasons,
+        hardBlock: true, log_id,
+        vigilResult,
+      };
+    }
+  }
+
   // ── Phase 1: Hard-block checks (bypass scoring entirely) ─────────────────
   // These are constitutional violations that cannot be un-done by score weighting.
 
@@ -331,13 +381,34 @@ function evaluateProposal(input = {}) {
     v3Risks.identityCheck   * weights.identityCheck +
     v3Risks.toolRisk        * weights.toolRisk;
 
-  const totalScore = baseScore + v3Score;
+  let totalScore = baseScore + v3Score;
   let decision = decide(totalScore);
 
   const allRisks = { ...risks, ...v3Risks };
   const reasons = Object.entries(allRisks)
     .filter(([, v]) => v > 0)
     .map(([k]) => k);
+
+  // ── Phase 2b: VIGIL score amplification ─────────────────────────────────
+  // If VIGIL found suspicious content (CHALLENGE), amplify CORD's score.
+  // If VIGIL detected obfuscation, add a risk signal.
+  if (vigilResult) {
+    if (vigilResult.decision === "CHALLENGE") {
+      const vigilAmplifier = vigilResult.severity * 0.5;
+      totalScore += vigilAmplifier;
+      reasons.push(`VIGIL suspicious (severity ${vigilResult.severity})`);
+      allRisks.vigilSuspicious = vigilResult.severity;
+    }
+    if (vigilResult.wasObfuscated) {
+      totalScore += 2;
+      reasons.push("Obfuscated content detected by VIGIL");
+      allRisks.vigilObfuscation = true;
+    }
+    // Re-decide with amplified score
+    if (vigilResult.decision === "CHALLENGE" || vigilResult.wasObfuscated) {
+      decision = decide(totalScore);
+    }
+  }
 
   // ── Phase 3: Intent lock enforcement ─────────────────────────────────────
 
@@ -373,7 +444,9 @@ function evaluateProposal(input = {}) {
     networkTarget: input.networkTarget || null,
   });
 
-  return { decision, score: totalScore, risks: allRisks, reasons, hardBlock: false, log_id };
+  const verdict = { decision, score: totalScore, risks: allRisks, reasons, hardBlock: false, log_id };
+  if (vigilResult) verdict.vigilResult = vigilResult;
+  return verdict;
 }
 
 // ── Plain English Explanations ────────────────────────────────────────────────
@@ -414,6 +487,13 @@ const EXPLANATIONS = {
     "No session intent has been declared. Set an intent lock so CORD can verify actions align with your goal.",
   "Out of scope":
     "This action falls outside the declared session scope (path, command, or network target not allowed).",
+  // VIGIL integration explanations
+  "VIGIL BLOCK — critical threat detected":
+    "VIGIL (always-on patrol) detected a critical security threat. Blocked before CORD evaluation.",
+  vigilSuspicious:
+    "VIGIL patrol detected suspicious patterns — CORD score amplified.",
+  vigilObfuscation:
+    "Content contains obfuscation (base64, unicode tricks, zero-width chars). Decoded and flagged by VIGIL.",
 };
 
 /**
