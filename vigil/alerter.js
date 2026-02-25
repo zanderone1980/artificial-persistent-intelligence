@@ -16,6 +16,9 @@ let lastHash = '0000000000000000000000000000000000000000000000000000000000000000
  * Initialize the alerter (load last hash from log)
  */
 function initialize() {
+  // Reset to genesis hash
+  lastHash = '0000000000000000000000000000000000000000000000000000000000000000';
+
   if (!fs.existsSync(config.alertLogPath)) {
     return;
   }

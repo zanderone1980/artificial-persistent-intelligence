@@ -55,6 +55,9 @@ jobs:
       - name: Run CORD tests
         run: npx jest cord/cord.test.js --verbose
 
+      - name: Run CORD + VIGIL integration tests
+        run: npx jest cord/cord-vigil.test.js --verbose
+
       - name: Run VIGIL tests
         run: npx jest vigil/vigil.test.js --verbose
 
