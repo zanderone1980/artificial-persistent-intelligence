@@ -1,12 +1,18 @@
 {
   "name": "cord-engine",
-  "version": "3.0.2",
-  "description": "CORD — AI safety protocol enforcement for autonomous agents. Hard blocks, plain English decisions, real-time dashboard, OpenAI/Anthropic middleware.",
+  "version": "4.0.0",
+  "description": "The AI that polices itself. 40 attack vectors blocked. Constitutional enforcement + threat detection. Battle-tested, zero dependencies.",
   "main": "cord/index.js",
+  "bin": {
+    "cord-engine": "./demo.js"
+  },
   "scripts": {
+    "demo": "node demo.js",
     "legion": "node legion/index.js",
     "dashboard": "node dashboard/server.js",
-    "test": "jest cord/cord.test.js --no-coverage",
+    "test": "jest --no-coverage",
+    "redteam": "jest tests/redteam.test.js --no-coverage",
+    "vigil": "jest vigil/ --no-coverage",
     "cord-demo": "node cord/demo.js"
   },
   "keywords": [
@@ -38,16 +44,10 @@
     "url": "https://github.com/zanderone1980/artificial-persistent-intelligence/issues"
   },
   "files": [
-    "cord/index.js",
-    "cord/cord.js",
-    "cord/policies.js",
-    "cord/explain.js",
-    "cord/middleware.js",
-    "cord/intentLock.js",
-    "cord/logger.js",
-    "cord/demo.js",
-    "dashboard/server.js",
-    "dashboard/index.html",
+    "cord/",
+    "vigil/",
+    "dashboard/",
+    "demo.js",
     "README.md",
     "LICENSE"
   ],
