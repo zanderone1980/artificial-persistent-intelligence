@@ -22,6 +22,7 @@ Usage:
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -178,6 +179,19 @@ def cmd_verify():
         print(f"  {RED}Chain CORRUPTED{RESET} — tampering detected at entry {count}")
 
 
+def _resolve_args(args: list[str]) -> list[str]:
+    """Resolve command arguments for subprocess execution.
+
+    Handles the case where a multi-word command is passed as a single
+    quoted string (e.g., python3 -m cord_engine 'git status' yields
+    args=['git status']). We split it with shlex so subprocess.run
+    can find the actual executable.
+    """
+    if len(args) == 1 and " " in args[0]:
+        return shlex.split(args[0])
+    return args
+
+
 def cmd_evaluate_and_run(args: list[str]):
     """Evaluate a command through CORD and optionally execute it."""
     command_text = " ".join(args)
@@ -203,8 +217,9 @@ def cmd_evaluate_and_run(args: list[str]):
     if url_match:
         proposal.network_target = url_match.group(1)
 
-    # Check for file paths
-    for arg in args[1:]:
+    # Check for file paths — use resolved args for path detection
+    exec_args = _resolve_args(args)
+    for arg in exec_args[1:]:
         if arg.startswith("/") or arg.startswith("~") or arg.startswith("./"):
             proposal.target_path = os.path.expanduser(arg)
             break
@@ -221,18 +236,18 @@ def cmd_evaluate_and_run(args: list[str]):
     # Act on decision
     if verdict.decision == Decision.ALLOW:
         print(f"\n  {GREEN}Executing...{RESET}\n")
-        result = subprocess.run(args, cwd=os.getcwd())
+        result = subprocess.run(exec_args, cwd=os.getcwd())
         sys.exit(result.returncode)
 
     elif verdict.decision == Decision.CONTAIN:
         print(f"\n  {YELLOW}Executing with monitoring...{RESET}\n")
-        result = subprocess.run(args, cwd=os.getcwd())
+        result = subprocess.run(exec_args, cwd=os.getcwd())
         sys.exit(result.returncode)
 
     elif verdict.decision == Decision.CHALLENGE:
         if _confirm_challenge():
             print(f"\n  {ORANGE}Principal confirmed. Executing...{RESET}\n")
-            result = subprocess.run(args, cwd=os.getcwd())
+            result = subprocess.run(exec_args, cwd=os.getcwd())
             sys.exit(result.returncode)
         else:
             print(f"\n  {DIM}Action cancelled by Principal.{RESET}")
