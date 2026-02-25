@@ -39,7 +39,19 @@ from .interceptor import (
     build_proposal,
 )
 
-__version__ = "4.0.0"
+# v4.1 framework adapters (optional — works without framework deps installed)
+try:
+    from .frameworks import (
+        CORDCallbackHandler,
+        wrap_langchain_llm,
+        wrap_crewai_agent,
+        wrap_llamaindex_llm,
+    )
+    _HAS_FRAMEWORKS = True
+except ImportError:
+    _HAS_FRAMEWORKS = False
+
+__version__ = "4.1.0"
 __all__ = [
     # Core pipeline
     "evaluate",
@@ -63,4 +75,9 @@ __all__ = [
     "ToolBlocked",
     "ToolChallenged",
     "build_proposal",
+    # Framework adapters (v4.1)
+    "CORDCallbackHandler",
+    "wrap_langchain_llm",
+    "wrap_crewai_agent",
+    "wrap_llamaindex_llm",
 ]

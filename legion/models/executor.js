@@ -10,6 +10,16 @@ const path = require("path");
 const { execSync } = require("child_process");
 const { REPO_ROOT } = require("../session");
 
+// ── Optional sandbox integration (v4.1) ──────────────────────────────────────
+// When available, SandboxedExecutor adds path validation, command allow-lists,
+// output size limits, and network byte quotas on top of CORD's proposal checks.
+let SandboxedExecutor = null;
+try {
+  ({ SandboxedExecutor } = require("../../cord/sandbox"));
+} catch {
+  // sandbox.js not available — executor runs with basic path check only
+}
+
 /**
  * Write content to a file (pre-approved by CORD).
  * Creates parent directories if needed.
@@ -23,7 +33,15 @@ function writeFile(filePath, content) {
     ? filePath
     : path.join(REPO_ROOT, filePath);
 
-  // Verify still inside repo root (belt + suspenders — CORD already checked)
+  // Use sandbox if available (validates path, checks size limits)
+  if (SandboxedExecutor) {
+    const sandbox = new SandboxedExecutor({ repoRoot: REPO_ROOT });
+    const result = sandbox.writeFile(abs, content);
+    console.log(`   ✅ Wrote ${result.bytesWritten} bytes → ${path.relative(REPO_ROOT, abs)} (sandboxed)`);
+    return result;
+  }
+
+  // Fallback: basic path check
   if (!abs.startsWith(REPO_ROOT)) {
     throw new Error(`EXECUTOR: Path escape attempt blocked: ${abs}`);
   }
@@ -50,6 +68,21 @@ function writeFile(filePath, content) {
  */
 function runCommand(command, options = {}) {
   console.log(`   ⚙️  Exec: ${command}`);
+
+  // Use sandbox if available (validates against blocked patterns + allow-list)
+  if (SandboxedExecutor) {
+    try {
+      const sandbox = new SandboxedExecutor({ repoRoot: REPO_ROOT });
+      const result = sandbox.runCommand(command);
+      console.log(`   ✅ Done (sandboxed)`);
+      return { success: true, stdout: result.stdout || "", stderr: "" };
+    } catch (err) {
+      console.error(`   ❌ Sandbox rejected: ${err.message}`);
+      return { success: false, stdout: "", stderr: err.message };
+    }
+  }
+
+  // Fallback: direct execution
   try {
     const stdout = execSync(command, {
       cwd: REPO_ROOT,

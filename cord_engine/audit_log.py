@@ -1,10 +1,16 @@
-"""CORD audit log — append-only JSONL with cryptographic hash chaining."""
+"""CORD audit log — append-only JSONL with cryptographic hash chaining.
+
+v4.1 additions:
+  - PII redaction (3 levels: none, pii, full)
+  - Regex-based redaction of SSN, credit card, email, phone
+"""
 
 from __future__ import annotations
 
 import hashlib
 import json
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -12,6 +18,45 @@ from typing import Any
 DEFAULT_LOG_PATH = Path(
     os.environ.get("CORD_LOG_PATH", str(Path(__file__).parent / "cord.log.jsonl"))
 )
+
+# ── PII redaction (v4.1) ─────────────────────────────────────────────────────
+
+REDACTION_LEVEL = os.environ.get("CORD_LOG_REDACTION", "pii")  # "none" | "pii" | "full"
+
+PII_PATTERNS = {
+    "ssn":         re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
+    "credit_card": re.compile(
+        r"\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|"
+        r"3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b"
+    ),
+    "email":       re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b"),
+    "phone":       re.compile(r"\b(\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"),
+}
+
+
+def redact_pii(text: str, level: str | None = None) -> str:
+    """Redact PII from text before logging.
+
+    Levels:
+      - "none":  no redaction (passthrough)
+      - "pii":   replace SSN, CC, email, phone with tokens
+      - "full":  replace entire text with SHA-256 hash prefix
+    """
+    effective_level = level or REDACTION_LEVEL
+    if not text or effective_level == "none":
+        return text
+
+    if effective_level == "full":
+        h = hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+        return f"{h}...[redacted]"
+
+    # PII-level redaction
+    redacted = text
+    redacted = PII_PATTERNS["ssn"].sub("[SSN-REDACTED]", redacted)
+    redacted = PII_PATTERNS["credit_card"].sub("[CC-REDACTED]", redacted)
+    redacted = PII_PATTERNS["email"].sub("[EMAIL-REDACTED]", redacted)
+    redacted = PII_PATTERNS["phone"].sub("[PHONE-REDACTED]", redacted)
+    return redacted
 
 
 def _hash(payload: str) -> str:
@@ -36,11 +81,20 @@ def append_log(
     entry: dict[str, Any],
     log_path: Path = DEFAULT_LOG_PATH,
 ) -> str:
-    """Append a hash-chained entry to the audit log. Returns the entry hash."""
+    """Append a hash-chained entry to the audit log. Returns the entry hash.
+
+    PII redaction is applied before writing (controlled by CORD_LOG_REDACTION env var).
+    """
     timestamp = datetime.now(timezone.utc).isoformat()
     prev_hash = _get_prev_hash(log_path)
 
-    base = {"timestamp": timestamp, "prev_hash": prev_hash, **entry}
+    # Apply PII redaction to sensitive fields
+    sanitized = dict(entry)
+    for field in ("proposal", "text", "path"):
+        if field in sanitized and isinstance(sanitized[field], str):
+            sanitized[field] = redact_pii(sanitized[field])
+
+    base = {"timestamp": timestamp, "prev_hash": prev_hash, **sanitized}
     entry_hash = _hash(prev_hash + json.dumps(base, sort_keys=True))
     log_entry = {**base, "entry_hash": entry_hash}
 

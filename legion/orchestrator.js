@@ -12,7 +12,7 @@
  */
 
 const path = require("path");
-const { evaluateProposal } = require("../cord/cord");
+const { evaluateProposal, validatePlan: cordValidatePlan } = require("../cord/cord");
 const { startSession, recordTask, summarizeSession, REPO_ROOT } = require("./session");
 const claude = require("./models/claude");
 const executor = require("./models/executor");
@@ -259,6 +259,35 @@ class Orchestrator {
     tasks.forEach((t, i) => {
       console.log(`   ${i + 1}. [${t.assignedModel.toUpperCase()}] ${t.description}`);
     });
+
+    // 2b. Plan-level validation — check aggregate task list for cross-task threats
+    console.log("\n🔍 Phase 1b: Plan-Level Validation");
+    const planCheck = cordValidatePlan(tasks, goal);
+    const planIcon =
+      planCheck.decision === "ALLOW" ? "✅" :
+      planCheck.decision === "CONTAIN" ? "🟡" :
+      planCheck.decision === "CHALLENGE" ? "🟠" : "🚫";
+    console.log(
+      `   ${planIcon} CORD PLAN: ${planCheck.decision} ` +
+      `(score: ${planCheck.score.toFixed(2)}, tasks: ${planCheck.taskCount}) ` +
+      `${planCheck.reasons.length ? `— ${planCheck.reasons.join(", ")}` : ""}`
+    );
+
+    if (planCheck.decision === "BLOCK") {
+      console.log(`\n🚫 CORD PLAN BLOCK — aggregate plan rejected`);
+      const summary = summarizeSession(this.session);
+      return { summary: { ...summary, blocked: true }, results: [], narrative: planCheck.reasons.join("; ") };
+    }
+    if (planCheck.decision === "CHALLENGE") {
+      const proceed = await this._challengeUser(
+        { id: "PLAN_AGGREGATE", description: `Aggregate plan (${tasks.length} tasks)` },
+        planCheck
+      );
+      if (!proceed) {
+        const summary = summarizeSession(this.session);
+        return { summary: { ...summary, blocked: true }, results: [], narrative: "Plan challenge rejected by user" };
+      }
+    }
 
     // 3. Execute tasks in order (respecting dependencies)
     console.log("\n🚀 Phase 2: Task Execution");

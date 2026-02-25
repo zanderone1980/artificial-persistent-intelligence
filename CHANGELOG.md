@@ -1,0 +1,87 @@
+# Changelog
+
+All notable changes to CORD Engine are documented here.
+Format follows [Keep a Changelog](https://keepachangelog.com/).
+
+## [4.1.0] — 2026-02-25
+
+### Added
+- **Plan-level validation**: `validatePlan()` checks aggregate task lists for cross-task privilege escalation, data exfiltration chains, and cumulative network exposure
+- **Framework adapters (JS)**: LangChain (`wrapLangChain`, `wrapChain`, `wrapTool`), CrewAI (`wrapCrewAgent`), AutoGen (`wrapAutoGenAgent`)
+- **Framework adapters (Python)**: LangChain (`CORDCallbackHandler`, `wrap_langchain_llm`), CrewAI (`wrap_crewai_agent`), LlamaIndex (`wrap_llamaindex_llm`)
+- **Threat model documentation**: `THREAT_MODEL.md` with attacker capabilities, TCB definition, all 40 red team vectors catalogued
+- **Audit log PII redaction**: 3 levels (`none`, `pii`, `full`) — SSN, credit card, email, phone auto-redacted
+- **Audit log encryption**: Optional AES-256-GCM encryption-at-rest via `CORD_LOG_KEY` env var
+- **Runtime containment**: `SandboxedExecutor` with path validation, command allow-lists, blocked dangerous patterns, output size limits, network byte quotas
+- **Evaluation cache**: LRU cache with configurable TTL (default 60s, max 1000 entries)
+- **Batch evaluation**: `evaluateBatch(proposals[])` for bulk processing
+- **Early-exit optimization**: Hard-blocks skip scored checks entirely
+
+### Changed
+- `logger.js` expanded with redaction, encryption, and configurable logging levels
+- `evaluateProposal()` returns early on hard-blocks (skips phases 2–4)
+- `executor.js` uses `SandboxedExecutor` when available (graceful fallback)
+- `cord/index.js` exports frameworks, cache, `validatePlan`, `evaluateBatch`
+
+### Security
+- PII no longer stored in plain text in audit logs (default: `pii` redaction)
+- Plan-level evasion attack surface closed via aggregate validation
+- Dangerous shell patterns (`rm -rf /`, `curl|sh`, `nc -l`, etc.) blocked at sandbox level
+- Network byte quotas prevent slow exfiltration via LEGION executor
+
+## [4.0.3] — 2026-02-25
+
+### Fixed
+- npm package trimmed to 55KB (excluded tests, logs, node_modules from publish)
+- Package `files` array made explicit per-file instead of directory globs
+
+## [4.0.2] — 2026-02-25
+
+### Fixed
+- Correct require paths in `bin/cord-engine` CLI entry point
+
+## [4.0.1] — 2026-02-25
+
+### Fixed
+- Add `bin/` directory to npm package for global CLI install
+
+## [4.0.0] — 2026-02-25
+
+### Added
+- CORD v3 protocol pipeline — 14 weighted risk checks across 5 phases
+- VIGIL threat patrol daemon — 8 detection layers (patterns, normalization, memory, canaries, proactive, semantic, rate limiting, circuit breaking)
+- CLI tool: `cord-engine eval`, `cord-engine scan`, `cord-engine demo`
+- Red team test suite — 40 attack vectors across 9 layers, 40/40 blocked
+- Financial risk detection (`financialRisk`) — money transfer, wallet, payment fraud patterns
+- Network target risk detection (`networkTargetRisk`) — suspicious domains, raw IPs, .onion, ngrok
+- Session management with intent locks and scope enforcement
+- Hash-chained audit log with SHA-256 integrity verification
+- LEGION multi-model orchestrator with CORD-gated execution
+- OpenAI and Anthropic SDK middleware wrappers
+- Plain-English explanation engine (`cord/explain.js`)
+
+### Changed
+- Renamed from SENTINEL to CORD (Counter-Operations & Risk Detection)
+- Python SDK version synced to 4.0.0
+
+## [3.0.2] — 2026-02-24
+
+### Added
+- Initial npm publish of `cord-engine` package
+- Core evaluation pipeline with 6 risk checks
+- Intent lock system for session scope enforcement
+
+## [2.2.0] — 2026-02-24
+
+### Added
+- Python SDK (`cord_engine`) with 9-step evaluation pipeline
+- Interceptor system: `@cord_guard` decorator, `guard_registry`, `CORDEnforcer` context manager
+- `ToolBlocked` and `ToolChallenged` exception types
+- PyPI publish of `cord-engine` package
+
+## [1.0.0] — 2026-02-23
+
+### Added
+- Initial SENTINEL implementation
+- Constitutional protocol enforcement (11 articles)
+- Basic injection, exfiltration, and privilege risk detection

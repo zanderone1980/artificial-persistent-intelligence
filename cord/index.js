@@ -1,6 +1,6 @@
 /**
  * CORD — Counter-Operations & Risk Detection
- * Public API v3
+ * Public API v4.1
  *
  * The complete surface. Import this, not cord.js directly.
  *
@@ -18,6 +18,15 @@
  *   // Wrap Anthropic client
  *   const anthropic = cord.wrapAnthropic(new Anthropic({ apiKey }));
  *
+ *   // Wrap LangChain model
+ *   const model = cord.frameworks.wrapLangChain(new ChatOpenAI());
+ *
+ *   // Validate an aggregate plan
+ *   const planCheck = cord.validatePlan(tasks, "Build a dashboard");
+ *
+ *   // Batch evaluate
+ *   const results = cord.evaluateBatch(["read file", "delete all"]);
+ *
  *   // Start a session with intent lock
  *   cord.session.start("Build unit tests for cord.js");
  */
@@ -27,6 +36,25 @@ const { explain, formatExplanation, DIMENSION_EXPLANATIONS, DECISION_CONTEXT } =
 const mw          = require("./middleware");
 const { setIntentLock, loadIntentLock, verifyPassphrase, LOCK_PATH } = require("./intentLock");
 const { appendLog, LOG_PATH } = require("./logger");
+const { EvalCache } = require("./cache");
+
+// ── v4.1 additions ─────────────────────────────────────────────────────────
+let frameworks = {};
+try {
+  frameworks = require("./frameworks");
+} catch (e) {
+  // Frameworks not available
+}
+
+let SandboxedExecutor = null;
+try {
+  ({ SandboxedExecutor } = require("./sandbox"));
+} catch (e) {
+  // Sandbox not available
+}
+
+// Shared evaluation cache — reused across evaluate() calls
+const evalCache = new EvalCache();
 
 // ── Optional VIGIL access ───────────────────────────────────────────────────
 // VIGIL is wired into evaluateProposal() in cord.js as Phase 0.
@@ -45,6 +73,7 @@ try {
 
 /**
  * Evaluate a proposal and return result + plain English explanation.
+ * Uses shared LRU cache for repeated proposals.
  *
  * @param {object|string} input — Proposal object or plain text string
  * @returns {object} { decision, score, risks, reasons, hardBlock, log_id, explanation }
@@ -52,9 +81,19 @@ try {
 function evaluate(input) {
   if (input === null || input === undefined) input = {};
   const normalized = typeof input === "string" ? { text: input } : input;
+  const text = normalized.text || normalized.proposal || "";
+
+  // Check cache first
+  const cached = evalCache.get(text);
+  if (cached) return cached;
+
   const result = cordEngine.evaluateProposal(normalized);
-  const explanation = explain(result, normalized.text || normalized.proposal || "");
-  return { ...result, explanation };
+  const explanation = explain(result, text);
+  const full = { ...result, explanation };
+
+  // Cache the result
+  evalCache.set(text, full);
+  return full;
 }
 
 // ── Session management ────────────────────────────────────────────────────────
@@ -114,6 +153,19 @@ module.exports = {
   // Core
   evaluate,
   session,
+
+  // v4.1: Plan-level validation and batch evaluation
+  validatePlan:   cordEngine.validatePlan,
+  evaluateBatch:  cordEngine.evaluateBatch,
+
+  // v4.1: Evaluation cache
+  cache: evalCache,
+
+  // v4.1: Framework adapters (LangChain, CrewAI, AutoGen)
+  frameworks,
+
+  // v4.1: Runtime containment
+  SandboxedExecutor,
 
   // Middleware / client wrappers
   middleware:    mw.middleware,

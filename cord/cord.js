@@ -637,6 +637,170 @@ function evaluate(input = {}) {
   return verdict;
 }
 
+// ── Plan-Level Validation (v4.1) ─────────────────────────────────────────────
+
+/**
+ * Validate an aggregate task plan before execution.
+ *
+ * Individual tasks may pass CORD checks, but their combination can form
+ * exfiltration chains, privilege escalation, or cumulative network exposure.
+ * This function catches cross-task threats that per-task checks miss.
+ *
+ * @param {Array}  tasks          - Array of task objects from LEGION decomposition
+ * @param {string} sessionIntent  - The declared session goal
+ * @returns {object}              - CORD verdict with planLevel: true
+ */
+function validatePlan(tasks = [], sessionIntent = "") {
+  if (!tasks || tasks.length === 0) {
+    return {
+      decision: "ALLOW",
+      score: 0,
+      reasons: [],
+      risks: {},
+      hardBlock: false,
+      planLevel: true,
+      taskCount: 0,
+    };
+  }
+
+  // 1. Concatenate all task descriptions → run as single CORD proposal
+  //    Use scoreProposal (not evaluateProposal) to avoid scope/intent-lock
+  //    enforcement on the aggregate text — scope checks happen per-task later.
+  const combinedText = tasks.map((t) => {
+    const desc = typeof t === "string" ? t : (t.description || t.text || "");
+    return desc;
+  }).join("\n");
+
+  // Run hard-block checks first (moral, drift, prompt injection)
+  const moral = moralRisk(combinedText);
+  if (moral.hardBlock) {
+    return {
+      decision: "BLOCK", score: 99, reasons: ["HARD BLOCK — moral violation (Article II)"],
+      risks: { moralCheck: 5 }, hardBlock: true, planLevel: true, taskCount: tasks.length,
+    };
+  }
+  const drift = driftRisk(combinedText);
+  if (drift.hardBlock) {
+    return {
+      decision: "BLOCK", score: 99, reasons: ["HARD BLOCK — protocol drift attempt (Protocol VIII)"],
+      risks: { driftCheck: 5 }, hardBlock: true, planLevel: true, taskCount: tasks.length,
+    };
+  }
+  const injection = promptInjectionRisk(combinedText);
+  if (injection.hardBlock) {
+    return {
+      decision: "BLOCK", score: 99, reasons: ["HARD BLOCK — prompt injection attempt (Article VII)"],
+      risks: { promptInjection: 5 }, hardBlock: true, planLevel: true, taskCount: tasks.length,
+    };
+  }
+
+  // Scored risk checks on combined text — plan-relevant dimensions only.
+  // Intentionally skips intentDrift and irreversibility, which produce false
+  // positives on high-level task descriptions that don't match intent verbatim.
+  const allGrants = tasks.flatMap((t) => typeof t === "string" ? [] : (t.grants || []));
+  const planRisks = {
+    injection:       injectionRisk(combinedText),
+    exfil:           exfilRisk(combinedText),
+    privilege:       privilegeRisk(combinedText, allGrants),
+    moralCheck:      moral.score,
+    promptInjection: injection.score,
+    piiLeakage:      piiRisk(combinedText, ""),
+    identityCheck:   identityRisk(combinedText),
+    financialRisk:   financialRisk(combinedText, ""),
+    networkTargetRisk: 0, // checked per-task in step 2 below
+  };
+
+  let planScore =
+    planRisks.injection       * weights.injection +
+    planRisks.exfil           * weights.exfil +
+    planRisks.privilege       * weights.privilege +
+    planRisks.moralCheck      * weights.moralCheck +
+    planRisks.promptInjection * weights.promptInjection +
+    planRisks.piiLeakage      * weights.piiLeakage +
+    planRisks.identityCheck   * weights.identityCheck +
+    planRisks.financialRisk   * (weights.financialRisk || 4);
+
+  const planReasons = Object.entries(planRisks).filter(([, v]) => v > 0).map(([k]) => k);
+
+  // 2. Check cumulative network exposure
+  const allNetworkTargets = tasks.flatMap((t) => {
+    if (typeof t === "string") return [];
+    return t.networkTargets || (t.networkTarget ? [t.networkTarget] : []);
+  });
+  const uniqueTargets = [...new Set(allNetworkTargets)];
+  if (uniqueTargets.length >= 3) {
+    planScore += 2;
+    planReasons.push(`Plan contacts ${uniqueTargets.length} unique network targets`);
+  }
+
+  // 3. Check privilege escalation chain (uses allGrants from risk checks above)
+  const hasElevated = allGrants.some((g) => /admin|sudo|root/.test(g));
+  if (hasElevated) {
+    planScore += 3;
+    planReasons.push("Plan requests elevated privileges");
+  }
+
+  // 4. Check cross-task data flow (write → read → exfil pattern)
+  const writePaths = tasks.filter((t) => {
+    if (typeof t === "string") return false;
+    return t.type === "code" || t.type === "write";
+  }).flatMap((t) => t.filePaths || []);
+
+  const hasReadTasks = tasks.some((t) => {
+    const desc = typeof t === "string" ? t : (t.description || "");
+    return /read|load|import|require|parse|open/i.test(desc);
+  });
+
+  const hasNetworkTasks = tasks.some((t) => {
+    if (typeof t === "string") return false;
+    return (t.networkTargets || []).length > 0 || t.networkTarget;
+  });
+
+  if (writePaths.length > 0 && hasReadTasks && hasNetworkTasks) {
+    planScore += 2;
+    planReasons.push("Plan has write→read→network exfiltration chain");
+  }
+
+  // 5. Check for excessive file scope
+  const allPaths = tasks.flatMap((t) => {
+    if (typeof t === "string") return [];
+    return t.filePaths || [];
+  });
+  const uniquePaths = [...new Set(allPaths)];
+  if (uniquePaths.length >= 10) {
+    planScore += 1;
+    planReasons.push(`Plan touches ${uniquePaths.length} unique files`);
+  }
+
+  // 6. Re-threshold using the adjusted score
+  const planDecision = decide(planScore);
+
+  return {
+    decision: planDecision,
+    score: planScore,
+    reasons: planReasons,
+    risks: planRisks,
+    hardBlock: false,
+    planLevel: true,
+    taskCount: tasks.length,
+  };
+}
+
+// ── Batch Evaluation (v4.1) ──────────────────────────────────────────────────
+
+/**
+ * Evaluate multiple proposals in bulk.
+ *
+ * @param {Array} proposals - Array of proposal objects or strings
+ * @returns {Array}         - Array of CORD verdicts
+ */
+function evaluateBatch(proposals = []) {
+  return proposals.map((p) => {
+    const normalized = typeof p === "string" ? { text: p } : p;
+    return evaluateProposal(normalized);
+  });
+}
+
 module.exports = {
   evaluateProposal,
   evaluate,
@@ -658,4 +822,7 @@ module.exports = {
   toolRisk,
   financialRisk,
   networkTargetRisk,
+  // v4.1 additions
+  validatePlan,
+  evaluateBatch,
 };

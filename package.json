@@ -1,6 +1,6 @@
 {
   "name": "cord-engine",
-  "version": "4.0.3",
+  "version": "4.1.0",
   "description": "The AI that polices itself. 40 attack vectors blocked. Constitutional enforcement + threat detection. Battle-tested, zero dependencies.",
   "main": "cord/index.js",
   "bin": {
@@ -52,6 +52,12 @@
     "cord/logger.js",
     "cord/middleware.js",
     "cord/policies.js",
+    "cord/cache.js",
+    "cord/sandbox.js",
+    "cord/frameworks/index.js",
+    "cord/frameworks/langchain.js",
+    "cord/frameworks/crewai.js",
+    "cord/frameworks/autogen.js",
     "vigil/alerter.js",
     "vigil/canary.js",
     "vigil/circuit.js",
@@ -65,6 +71,8 @@
     "vigil/scanner.js",
     "vigil/semantic.js",
     "vigil/vigil.js",
+    "CHANGELOG.md",
+    "THREAT_MODEL.md",
     "README.md",
     "LICENSE"
   ],

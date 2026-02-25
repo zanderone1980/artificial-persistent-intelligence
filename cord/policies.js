@@ -87,4 +87,12 @@ module.exports = {
     read:    0.0,   // Read-only — no additional risk
     query:   0.0,
   },
+
+  // ── PII patterns for log redaction (global flag for replace) ────────────
+  PII_PATTERNS: {
+    ssn:        /\b\d{3}-\d{2}-\d{4}\b/g,
+    creditCard: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13}|6(?:011|5[0-9]{2})[0-9]{12})\b/g,
+    email:      /\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b/g,
+    phone:      /\b(\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
+  },
 };
