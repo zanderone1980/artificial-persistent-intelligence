@@ -4,7 +4,7 @@
   "description": "The AI that polices itself. 40 attack vectors blocked. Constitutional enforcement + threat detection. Battle-tested, zero dependencies.",
   "main": "cord/index.js",
   "bin": {
-    "cord-engine": "./demo.js"
+    "cord-engine": "bin/cord-engine"
   },
   "scripts": {
     "demo": "node demo.js",
@@ -44,6 +44,7 @@
     "url": "https://github.com/zanderone1980/artificial-persistent-intelligence/issues"
   },
   "files": [
+    "bin/",
     "cord/",
     "vigil/",
     "dashboard/",

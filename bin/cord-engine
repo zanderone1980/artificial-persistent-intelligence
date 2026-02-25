@@ -1,0 +1,60 @@
+#!/usr/bin/env node
+/**
+ * CORD Engine CLI — entry point for `npx cord-engine <command>`.
+ *
+ * Commands:
+ *   demo      Run the live attack simulation
+ *   eval      Evaluate a text proposal
+ *   version   Print version
+ */
+
+const command = process.argv[2];
+
+if (!command || command === "--help" || command === "-h") {
+  console.log(`
+  CORD — Counter-Operations & Risk Detection
+
+  Usage: cord-engine <command>
+
+  Commands:
+    demo              Run live attack simulation
+    eval <text>       Evaluate a text proposal
+    version           Print version
+
+  Examples:
+    npx cord-engine demo
+    npx cord-engine eval "rm -rf /"
+    npx cord-engine eval "git status"
+`);
+  process.exit(0);
+}
+
+if (command === "version" || command === "--version" || command === "-v") {
+  const pkg = require("../package.json");
+  console.log(`cord-engine v${pkg.version}`);
+  process.exit(0);
+}
+
+if (command === "demo") {
+  require("../demo");
+} else if (command === "eval") {
+  const text = process.argv.slice(3).join(" ");
+  if (!text) {
+    console.error("Usage: cord-engine eval <text>");
+    process.exit(1);
+  }
+  const cord = require("../cord/index");
+  const result = cord.evaluate({ text });
+  const icon = { BLOCK: "\ud83d\udeab", CHALLENGE: "\u26a0\ufe0f", CONTAIN: "\ud83d\udce6", ALLOW: "\u2705" }[result.decision] || "?";
+  console.log(`${icon} ${result.decision} (score: ${result.score})`);
+  if (result.explanation && result.explanation.summary) {
+    console.log(`   ${result.explanation.summary}`);
+  }
+  if (result.reasons && result.reasons.length) {
+    result.reasons.forEach((r) => console.log(`   - ${r}`));
+  }
+} else {
+  console.error(`Unknown command: ${command}`);
+  console.error("Run cord-engine --help for usage.");
+  process.exit(1);
+}
