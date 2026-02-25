@@ -10,6 +10,7 @@ const scanner = require('./scanner');
 const alerter = require('./alerter');
 const config = require('./config');
 const { SessionMemory, evaluateWithMemory, sessionMemory } = require('./memory');
+const { CanaryRegistry } = require('./canary');
 
 /**
  * VIGIL Daemon Class
@@ -19,6 +20,7 @@ class Vigil extends EventEmitter {
     super();
     this.running = false;
     this.memory = new SessionMemory();
+    this.canaries = new CanaryRegistry();
     this.stats = {
       totalScans: 0,
       allowed: 0,
@@ -26,6 +28,8 @@ class Vigil extends EventEmitter {
       blocked: 0,
       criticalThreats: 0,
       escalations: 0,
+      canariesPlanted: 0,
+      canariesTriggered: 0,
     };
   }
 
@@ -129,6 +133,78 @@ class Vigil extends EventEmitter {
   }
 
   /**
+   * Plant a canary — generate tokens to embed in a system prompt.
+   * PROACTIVE: sets the trap before any attack can occur.
+   *
+   * @param {object} [options]
+   * @param {string} [options.sessionId]
+   * @param {string[]} [options.types] — ['uuid', 'zeroWidth', 'honey']
+   * @returns {{ canaryId, tokens, injectText }} — embed injectText in your system prompt
+   */
+  plantCanary(options = {}) {
+    if (!this.running) {
+      throw new Error('VIGIL: Not running - call start() first');
+    }
+    const result = this.canaries.plant(options);
+    this.stats.canariesPlanted++;
+    this.emit('canaryPlanted', result);
+    return result;
+  }
+
+  /**
+   * Scan agent output for canary leaks and threat patterns.
+   * Call this on every LLM response BEFORE it reaches the user.
+   * PROACTIVE: confirms extraction attacks with certainty.
+   *
+   * @param {string} text — agent output to scan
+   * @param {string} [context] — label for where this text came from
+   * @returns {object} — { decision, canaryTriggered, threats, ... }
+   */
+  scanOutput(text, context = 'agent_output') {
+    if (!this.running) {
+      throw new Error('VIGIL: Not running - call start() first');
+    }
+
+    // 1. Check canaries first — highest certainty signal
+    const canaryResult = this.canaries.scan(text, context);
+
+    if (canaryResult.triggered) {
+      this.stats.canariesTriggered += canaryResult.detections.length;
+      const detection = canaryResult.detections[0];
+
+      const result = {
+        decision: 'BLOCK',
+        severity: 10,
+        hasCriticalThreat: true,
+        canaryTriggered: true,
+        canaryDetections: canaryResult.detections,
+        summary: detection.message,
+        threats: [{
+          category: 'canary',
+          pattern: 'CANARY_TRIGGERED',
+          severity: 10,
+          description: detection.message,
+        }],
+      };
+
+      alerter.logAlert(result, text);
+      this.emit('canaryTriggered', result);
+      this.emit('critical', result);
+      this.stats.blocked++;
+      this.stats.criticalThreats++;
+      this.stats.totalScans++;
+
+      return result;
+    }
+
+    // 2. Also run normal threat scan on output
+    const scanResult = this.scan(text);
+    scanResult.canaryTriggered = false;
+
+    return scanResult;
+  }
+
+  /**
    * Get current stats
    */
   getStats() {
@@ -153,8 +229,11 @@ class Vigil extends EventEmitter {
       blocked: 0,
       criticalThreats: 0,
       escalations: 0,
+      canariesPlanted: 0,
+      canariesTriggered: 0,
     };
     this.memory.clear();
+    this.canaries.clear();
   }
 }
 
@@ -190,6 +269,7 @@ module.exports = {
   evaluateWithVigil,
   Vigil,
   sessionMemory, // Export memory instance for direct access
+  CanaryRegistry, // Export for advanced use
 };
 
 /**

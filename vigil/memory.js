@@ -190,6 +190,155 @@ class SessionMemory {
   }
 
   /**
+   * Trajectory analysis — proactive attack prediction.
+   *
+   * Compares the session's severity vector against known attack patterns.
+   * Returns a threat assessment BEFORE the attack arrives, based on
+   * what the trajectory looks like so far.
+   *
+   * Known attack trajectories:
+   *   slow_burn      — steadily increasing scores (reconnaissance → exploit)
+   *   trust_building — alternating clean/risky turns (build rapport, pivot)
+   *   persistence    — repeated low-severity attempts (keep trying, waiting)
+   *   recon_sweep    — multiple threat categories hit once each (mapping)
+   *   sudden_spike   — clean history then single large hit (sleeper agent)
+   *
+   * @param {string} [sessionId]
+   * @returns {object} { pattern, confidence, recommendation, evidence }
+   */
+  analyzeTrajectory(sessionId) {
+    const sid = sessionId || this._activeSessionId;
+    const session = sid ? this.sessions.get(sid) : null;
+
+    const empty = {
+      pattern: 'none',
+      confidence: 0,
+      recommendation: null,
+      evidence: [],
+    };
+
+    if (!session || session.turns.length < 3) return empty;
+
+    const turns = session.turns;
+    const severities = turns.map(t => t.severity);
+    const len = severities.length;
+
+    // ── 1. Sudden spike — checked first (takes priority over slow_burn) ───
+    if (len >= 4) {
+      const history = severities.slice(0, -1);
+      const last = severities[len - 1];
+      const historyAvg = history.reduce((a, b) => a + b, 0) / history.length;
+
+      if (historyAvg <= 1 && last >= 7) {
+        const confidence = Math.min(90, 50 + last * 5);
+        return {
+          pattern: 'sudden_spike',
+          confidence,
+          recommendation: 'BLOCK',
+          evidence: [
+            `History average severity: ${historyAvg.toFixed(1)} — appeared clean`,
+            `Current turn severity: ${last} — sudden critical threat`,
+            'Pattern matches sleeper or delayed injection attack',
+          ],
+        };
+      }
+    }
+
+    // ── 2. Slow burn — sustained escalation over ≥4 turns ─────────────────
+    if (len >= 4) {
+      const recent = severities.slice(-4);
+      const diffs = recent.slice(1).map((v, i) => v - recent[i]);
+      const allPositive = diffs.every(d => d >= 0);
+      const anyIncrease = diffs.some(d => d > 0);
+      const totalRise = recent[recent.length - 1] - recent[0];
+
+      if (allPositive && anyIncrease && totalRise >= 2) {
+        const confidence = Math.min(95, 40 + totalRise * 10 + len * 2);
+        return {
+          pattern: 'slow_burn',
+          confidence,
+          recommendation: confidence >= 70 ? 'BLOCK' : 'CHALLENGE',
+          evidence: [
+            `Severity rose ${totalRise} points over last ${len} turns`,
+            `Trajectory: [${recent.join(' → ')}]`,
+            'Pattern matches recon-then-exploit attack vector',
+          ],
+        };
+      }
+    }
+
+    // ── 2. Trust building — alternating clean/risky ────────────────────────
+    if (len >= 4) {
+      const recent = turns.slice(-6);
+      const cleanTurns = recent.filter(t => t.severity === 0).length;
+      const riskyTurns = recent.filter(t => t.severity > 0).length;
+      const lastTurn = recent[recent.length - 1];
+      const alternating = recent.slice(1).some((t, i) =>
+        (recent[i].severity === 0) !== (t.severity === 0)
+      );
+
+      if (cleanTurns >= 2 && riskyTurns >= 2 && alternating && lastTurn.severity > 2) {
+        const confidence = Math.min(85, 30 + riskyTurns * 10 + lastTurn.severity * 5);
+        return {
+          pattern: 'trust_building',
+          confidence,
+          recommendation: confidence >= 65 ? 'CHALLENGE' : null,
+          evidence: [
+            `${cleanTurns} clean turns interspersed with ${riskyTurns} risky turns`,
+            `Last turn severity: ${lastTurn.severity}`,
+            'Pattern matches trust-then-exploit social engineering',
+          ],
+        };
+      }
+    }
+
+    // ── 3. Persistence — repeated low-severity attempts ────────────────────
+    if (len >= 5) {
+      const recent = severities.slice(-5);
+      const allLow = recent.every(s => s > 0 && s <= 3);
+      const count = recent.filter(s => s > 0).length;
+
+      if (allLow && count >= 4) {
+        const confidence = Math.min(80, 20 + count * 10 + len * 2);
+        return {
+          pattern: 'persistence',
+          confidence,
+          recommendation: confidence >= 60 ? 'CHALLENGE' : null,
+          evidence: [
+            `${count} consecutive low-severity attempts`,
+            `Sustained score range: [${Math.min(...recent)}–${Math.max(...recent)}]`,
+            'Pattern matches brute-force / slow-probe attack',
+          ],
+        };
+      }
+    }
+
+    // ── 4. Recon sweep — multiple distinct threat categories ───────────────
+    if (len >= 3) {
+      const uniqueCategories = new Set(
+        turns.flatMap(t => t.categories)
+      );
+      const categoryCount = uniqueCategories.size;
+      const hasRiskyTurns = turns.some(t => t.severity > 0);
+
+      if (categoryCount >= 3 && hasRiskyTurns) {
+        const confidence = Math.min(75, 20 + categoryCount * 15);
+        return {
+          pattern: 'recon_sweep',
+          confidence,
+          recommendation: confidence >= 60 ? 'CHALLENGE' : null,
+          evidence: [
+            `${categoryCount} distinct threat categories probed: ${[...uniqueCategories].join(', ')}`,
+            'Multiple category hits suggest systematic capability mapping',
+          ],
+        };
+      }
+    }
+
+    return empty;
+  }
+
+  /**
    * Clean up expired sessions
    */
   cleanupExpiredSessions() {
@@ -322,6 +471,16 @@ class SessionMemory {
       recommendation = "CHALLENGE";
     }
 
+    // Trajectory analysis — proactive prediction
+    const trajectory = this.analyzeTrajectory(this._activeSessionId);
+
+    // Trajectory can upgrade recommendation
+    if (trajectory.recommendation === 'BLOCK' && recommendation !== 'BLOCK') {
+      recommendation = 'BLOCK';
+    } else if (trajectory.recommendation === 'CHALLENGE' && !recommendation) {
+      recommendation = 'CHALLENGE';
+    }
+
     return {
       cumulativeScore,
       escalating,
@@ -329,6 +488,7 @@ class SessionMemory {
       recommendation,
       topCategories,
       turnCount: len,
+      trajectory,
     };
   }
 
