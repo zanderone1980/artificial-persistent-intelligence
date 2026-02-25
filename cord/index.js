@@ -32,8 +32,11 @@ const { appendLog, LOG_PATH } = require("./logger");
 // VIGIL is wired into evaluateProposal() in cord.js as Phase 0.
 // We re-export it here for direct access if needed.
 let vigilDaemon = null;
+let proactiveScanner = null;
 try {
-  vigilDaemon = require("../vigil/vigil").vigil;
+  const vigilMod = require("../vigil/vigil");
+  vigilDaemon = vigilMod.vigil;
+  proactiveScanner = vigilDaemon ? vigilDaemon.proactive : null;
 } catch (e) {
   // VIGIL not available
 }
@@ -121,6 +124,9 @@ module.exports = {
 
   // VIGIL (always-on patrol — null if not installed)
   vigil: vigilDaemon,
+
+  // Proactive scanner (indirect injection, fingerprinting, attack phases)
+  proactive: proactiveScanner,
 
   // Logging
   LOG_PATH,

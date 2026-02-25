@@ -61,5 +61,11 @@ jobs:
       - name: Run VIGIL tests
         run: npx jest vigil/vigil.test.js --verbose
 
+      - name: Run VIGIL proactive tests (canary + trajectory)
+        run: npx jest vigil/vigil.proactive.test.js --verbose
+
+      - name: Run VIGIL proactive scanner tests (indirect injection + attack phases)
+        run: npx jest vigil/proactive.test.js --verbose
+
       - name: Run VIGIL inline tests
         run: node vigil/vigil.js --test

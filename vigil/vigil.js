@@ -11,6 +11,7 @@ const alerter = require('./alerter');
 const config = require('./config');
 const { SessionMemory, evaluateWithMemory, sessionMemory } = require('./memory');
 const { CanaryRegistry } = require('./canary');
+const { ProactiveScanner } = require('./proactive');
 
 /**
  * VIGIL Daemon Class
@@ -21,6 +22,7 @@ class Vigil extends EventEmitter {
     this.running = false;
     this.memory = new SessionMemory();
     this.canaries = new CanaryRegistry();
+    this.proactive = new ProactiveScanner();
     this.stats = {
       totalScans: 0,
       allowed: 0,
@@ -30,6 +32,8 @@ class Vigil extends EventEmitter {
       escalations: 0,
       canariesPlanted: 0,
       canariesTriggered: 0,
+      inputsScreened: 0,
+      indirectInjections: 0,
     };
   }
 
@@ -205,6 +209,94 @@ class Vigil extends EventEmitter {
   }
 
   /**
+   * Pre-screen incoming content for indirect injection attacks.
+   * PROACTIVE: filters poisoned inputs BEFORE they enter the agent context.
+   *
+   * Use this on documents, URLs, tool results, pasted text — anything
+   * external that's about to be fed to the LLM.
+   *
+   * @param {string} content - Raw content to pre-screen
+   * @param {string} [source='unknown'] - Where the content came from
+   * @returns {object} - { clean, threats, severity, decision, summary, ... }
+   */
+  scanInput(content, source = 'unknown') {
+    if (!this.running) {
+      throw new Error('VIGIL: Not running - call start() first');
+    }
+
+    this.stats.inputsScreened++;
+
+    // 1. Check fingerprint database (O(1) fast-match)
+    const fpResult = this.proactive.checkFingerprint(content);
+
+    if (fpResult.match) {
+      const result = {
+        clean: false,
+        decision: 'BLOCK',
+        severity: 10,
+        summary: `KNOWN ATTACK FINGERPRINT: ${fpResult.info.label}`,
+        threats: [{
+          category: 'knownAttack',
+          fingerprint: fpResult.fingerprint,
+          info: fpResult.info,
+          source,
+        }],
+        source,
+        fingerprint: fpResult,
+      };
+
+      this.stats.blocked++;
+      this.stats.indirectInjections++;
+      alerter.logAlert(result, content);
+      this.emit('indirectInjection', result);
+      return result;
+    }
+
+    // 2. Run indirect injection scanner
+    const iiResult = this.proactive.scanForIndirectInjection(content, source);
+
+    if (!iiResult.clean) {
+      this.stats.indirectInjections++;
+      if (iiResult.decision === 'BLOCK') {
+        this.stats.blocked++;
+      }
+      alerter.logAlert(iiResult, content);
+      this.emit('indirectInjection', iiResult);
+    }
+
+    // 3. Track velocity
+    this.proactive.recordScanVelocity(this.memory._activeSessionId);
+
+    return iiResult;
+  }
+
+  /**
+   * Classify the current attack phase and predict next-turn threat level.
+   * PROACTIVE: forecasts attacks before they land.
+   *
+   * @param {string} text - Current message text
+   * @returns {{ phase, prediction }}
+   */
+  assessThreatPosture(text) {
+    if (!this.running) {
+      throw new Error('VIGIL: Not running - call start() first');
+    }
+
+    const sessionId = this.memory._activeSessionId || 'default';
+    const scanResult = scanner.scan(text);
+    const memoryAssessment = this.memory.assess();
+
+    const phase = this.proactive.classifyAttackPhase(text, sessionId, scanResult);
+    const prediction = this.proactive.predictThreatLevel(sessionId, memoryAssessment);
+
+    return {
+      phase,
+      prediction,
+      trajectory: memoryAssessment.trajectory || null,
+    };
+  }
+
+  /**
    * Get current stats
    */
   getStats() {
@@ -231,9 +323,12 @@ class Vigil extends EventEmitter {
       escalations: 0,
       canariesPlanted: 0,
       canariesTriggered: 0,
+      inputsScreened: 0,
+      indirectInjections: 0,
     };
     this.memory.clear();
     this.canaries.clear();
+    this.proactive.clear();
   }
 }
 
@@ -268,8 +363,9 @@ module.exports = {
   vigil,
   evaluateWithVigil,
   Vigil,
-  sessionMemory, // Export memory instance for direct access
-  CanaryRegistry, // Export for advanced use
+  sessionMemory,    // Export memory instance for direct access
+  CanaryRegistry,   // Export for advanced use
+  ProactiveScanner, // Export for advanced use
 };
 
 /**

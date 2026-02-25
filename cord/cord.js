@@ -258,9 +258,43 @@ function evaluateProposal(input = {}) {
   // we skip the entire CORD pipeline — no score, no scope check, just BLOCK.
   // If it finds suspicious (CHALLENGE) content, we amplify CORD's score.
   let vigilResult = null;
+  let proactiveResult = null;
   if (vigilModule && input.useVigil !== false) {
     const v = vigilModule.vigil;
     if (!v.running) v.start();
+
+    // Phase 0a: Proactive input pre-screen (indirect injection in rawInput)
+    if (rawInput && v.proactive) {
+      try {
+        proactiveResult = v.scanInput(rawInput, input.inputSource || "rawInput");
+      } catch (e) {
+        proactiveResult = null;
+      }
+
+      if (proactiveResult && proactiveResult.decision === "BLOCK") {
+        const reasons = ["VIGIL INDIRECT INJECTION — " + (proactiveResult.summary || "poisoned input detected")];
+        const log_id = appendLog({
+          decision: "BLOCK",
+          score: 99,
+          risks: { indirectInjection: true, indirectSeverity: proactiveResult.severity },
+          reasons,
+          proposal: text,
+          path: input.path || null,
+          networkTarget: input.networkTarget || null,
+          hardBlock: true,
+        });
+        return {
+          decision: "BLOCK", score: 99,
+          risks: { indirectInjection: true, indirectSeverity: proactiveResult.severity },
+          reasons,
+          hardBlock: true, log_id,
+          vigilResult: null,
+          proactiveResult,
+        };
+      }
+    }
+
+    // Phase 0b: Standard VIGIL threat scan
     try {
       vigilResult = v.scan(scanText);
     } catch (e) {
@@ -392,6 +426,7 @@ function evaluateProposal(input = {}) {
   // ── Phase 2b: VIGIL score amplification ─────────────────────────────────
   // If VIGIL found suspicious content (CHALLENGE), amplify CORD's score.
   // If VIGIL detected obfuscation, add a risk signal.
+  // If proactive scanner found non-blocking threats, amplify score.
   if (vigilResult) {
     if (vigilResult.decision === "CHALLENGE") {
       const vigilAmplifier = vigilResult.severity * 0.5;
@@ -408,6 +443,15 @@ function evaluateProposal(input = {}) {
     if (vigilResult.decision === "CHALLENGE" || vigilResult.wasObfuscated) {
       decision = decide(totalScore);
     }
+  }
+
+  // Phase 2c: Proactive score amplification
+  // If indirect injection was detected but not blocked (CHALLENGE), amplify
+  if (proactiveResult && !proactiveResult.clean && proactiveResult.decision === "CHALLENGE") {
+    totalScore += proactiveResult.severity * 0.3;
+    reasons.push(`Indirect injection detected in input (severity ${proactiveResult.severity})`);
+    allRisks.indirectInjection = proactiveResult.severity;
+    decision = decide(totalScore);
   }
 
   // ── Phase 3: Intent lock enforcement ─────────────────────────────────────
@@ -446,6 +490,7 @@ function evaluateProposal(input = {}) {
 
   const verdict = { decision, score: totalScore, risks: allRisks, reasons, hardBlock: false, log_id };
   if (vigilResult) verdict.vigilResult = vigilResult;
+  if (proactiveResult && !proactiveResult.clean) verdict.proactiveResult = proactiveResult;
   return verdict;
 }
 
