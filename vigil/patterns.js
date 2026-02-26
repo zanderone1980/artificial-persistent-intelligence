@@ -110,6 +110,18 @@ const patterns = {
     /:\(\)\s*\{[^}]*:\|:.*\}/g,    // Fork bomb
   ],
 
+  // ── Agent & tool-chain attacks (emerging 2025+) ─────────────────────────
+  agentAttacks: [
+    /\b(tell|instruct|convince)\s+the\s+(other|next|downstream)\s+(agent|model)/gi,
+    /\bpass\s+(instructions?|commands?)\s+to\s+the\s+(next|other)\s+(agent|model)/gi,
+    /\b(escape|break\s+out\s+of)\s+(the\s+)?(sandbox|container|jail)\b/gi,
+    /\bself[_-]?(modify|replicate|propagate)\b/gi,
+    /\b(register|inject)\s+(a\s+)?(fake|malicious|rogue)\s+(tool|server|plugin)\b/gi,
+    /\b(intercept|hijack)\s+(tool|mcp|plugin)\s+(calls?|requests?|responses?)\b/gi,
+    /\b(modify|write\s+to|patch)\s+(your\s+)?(own\s+)?(source|code|weights)\b/gi,
+    /\bpersist\s+(beyond|after|across)\s+(the\s+)?(session|conversation)\b/gi,
+  ],
+
   // ── Suspicious URLs ─────────────────────────────────────────────────────
   suspiciousURLs: [
     /https?:\/\/[^\/\s]*evil[^\/\s]*/gi,
@@ -128,13 +140,14 @@ const categoryWeights = {
   injection: 10,
   exfil: 10,
   manipulation: 10,
+  agentAttacks: 10,
   obfuscation: 5,
   dangerousOps: 8,
   suspiciousURLs: 7,
 };
 
 // Critical categories that trigger immediate BLOCK
-const criticalCategories = ['injection', 'exfil', 'manipulation'];
+const criticalCategories = ['injection', 'exfil', 'manipulation', 'agentAttacks'];
 
 module.exports = {
   patterns,

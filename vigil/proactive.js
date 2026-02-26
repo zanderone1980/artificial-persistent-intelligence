@@ -52,6 +52,56 @@ const INDIRECT_INJECTION_PATTERNS = [
   /\bemergency\s+protocol/gi,
 ];
 
+// ── Emerging Threat Patterns (2025+) ────────────────────────────────────────
+// Forward-looking patterns for next-generation AI attack vectors.
+// These target threats that are becoming real as multi-agent systems,
+// tool-use chains, MCP servers, and autonomous agents proliferate.
+
+const EMERGING_THREAT_PATTERNS = [
+  // Agent-to-agent manipulation (multi-agent systems)
+  /\b(tell|instruct|convince|direct)\s+the\s+(other|next|downstream)\s+(agent|model|assistant)/gi,
+  /\bpass\s+(this|these)\s+(instructions?|commands?|messages?)\s+to\s+the\s+(next|other)/gi,
+  /\bwhen\s+(agent|model)\s+\w+\s+(receives?|reads?|processes?)\s+this/gi,
+  /\b(relay|forward|propagate)\s+to\s+(all|other)\s+agents?\b/gi,
+  /\bhidden\s+payload\s+for\s+(agent|model|assistant)\b/gi,
+
+  // Tool-use chain exploitation
+  /\bcall\s+\w+\s+tool\s+(then|and\s+then|followed\s+by|before|after)\b/gi,
+  /\bchain\s+(the\s+)?tools?\s+to\b/gi,
+  /\buse\s+\w+\s+output\s+as\s+input\s+(for|to)\s+\w+\b/gi,
+  /\bpipe\s+(the\s+)?(result|output)\s+(into|to)\s+(another|next|the)\s+tool\b/gi,
+  /\btool\s+results?\s+should\s+(contain|include|inject)\b/gi,
+
+  // MCP / Plugin server poisoning
+  /\b(mcp|plugin|extension|server)\s+(override|inject|poison|tamper|modify)\b/gi,
+  /\bmodify\s+(the\s+)?(tool|server|plugin)\s+(response|output|result)\b/gi,
+  /\b(intercept|hijack|mitm)\s+(tool|mcp|plugin)\s+(calls?|requests?|responses?)\b/gi,
+  /\bregister\s+(a\s+)?(fake|malicious|rogue)\s+(tool|server|plugin)\b/gi,
+  /\btool_result.*?(ignore|override|system)/gi,
+
+  // Reasoning trace / chain-of-thought exploitation
+  /\b(in\s+your|during)\s+(thinking|reasoning|chain.of.thought|scratchpad)\b/gi,
+  /\bhide\s+(this|the\s+following)\s+in\s+(your\s+)?(reasoning|thinking|thoughts)\b/gi,
+  /\b(thinking|reasoning)\s+(block|section|trace)\s*:?\s*(ignore|override|inject)/gi,
+  /\bplace\s+.*\s+in\s+<thinking>/gi,
+
+  // Autonomous agent sandbox escape
+  /\b(escape|break\s+out\s+of|exit)\s+(the\s+)?(sandbox|container|jail|environment)\b/gi,
+  /\b(spawn|create|launch|fork)\s+(a\s+)?(new\s+)?(process|shell|terminal|agent)\b/gi,
+  /\bself[_-]?(modify|replicate|propagate|update|patch|evolve)\b/gi,
+  /\bpersist\s+(beyond|after|across)\s+(the\s+)?(session|conversation|context)\b/gi,
+  /\b(modify|write\s+to|patch)\s+(your\s+)?(own\s+)?(source|code|weights|config)\b/gi,
+
+  // Data poisoning via context window
+  /\b(fill|flood|stuff|pack)\s+(the\s+)?(context|window|prompt|memory)\b/gi,
+  /\b(exhaust|overflow|exceed)\s+(the\s+)?(context|token|memory)\s+(limit|window|budget)\b/gi,
+  /\bcontext\s+window\s+(attack|exploit|overflow|manipulation)\b/gi,
+
+  // Credential / API key harvesting from tool responses
+  /\b(extract|harvest|collect|scrape)\s+.{0,20}(api[_\s]?keys?|tokens?|credentials?|secrets?)\s+(from|in)\s+(tool|server|response)/gi,
+  /\b(store|save|cache|remember)\s+.{0,20}(api[_\s]?keys?|tokens?|credentials?)\s+for\s+later\b/gi,
+];
+
 // ── Reconnaissance Patterns ─────────────────────────────────────────────────
 // Early-stage probing that precedes active attacks
 
@@ -143,12 +193,25 @@ class ProactiveScanner {
 
     // Check indirect injection patterns
     for (const pattern of INDIRECT_INJECTION_PATTERNS) {
-      // Reset regex lastIndex
       pattern.lastIndex = 0;
       const matches = scanTarget.match(pattern);
       if (matches) {
         threats.push({
           category: "indirectInjection",
+          pattern: pattern.source.substring(0, 60),
+          matches: [...new Set(matches.map((m) => m.trim()))].slice(0, 3),
+          source,
+        });
+      }
+    }
+
+    // Check emerging threat patterns (agent-to-agent, tool-chain, MCP, etc.)
+    for (const pattern of EMERGING_THREAT_PATTERNS) {
+      pattern.lastIndex = 0;
+      const matches = scanTarget.match(pattern);
+      if (matches) {
+        threats.push({
+          category: "emergingThreat",
           pattern: pattern.source.substring(0, 60),
           matches: [...new Set(matches.map((m) => m.trim()))].slice(0, 3),
           source,
@@ -191,6 +254,7 @@ class ProactiveScanner {
       threats.some(
         (t) =>
           t.category === "indirectInjection" ||
+          t.category === "emergingThreat" ||
           t.category === "injection" ||
           t.category === "exfil"
       )
@@ -596,5 +660,6 @@ module.exports = {
   ATTACK_PHASES,
   THREAT_LEVELS,
   INDIRECT_INJECTION_PATTERNS,
+  EMERGING_THREAT_PATTERNS,
   RECON_PATTERNS,
 };

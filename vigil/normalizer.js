@@ -21,22 +21,31 @@ const ZERO_WIDTH_RE = /[\u200B\u200C\u200D\u200E\u200F\uFEFF\u00AD\u2060\u180E]/
 
 // ── Homoglyph map (Cyrillic/Greek → Latin lookalikes) ──────────────────────
 const HOMOGLYPHS = {
-  // Cyrillic
+  // Cyrillic — full lookalike coverage
   "\u0410": "A", "\u0412": "B", "\u0421": "C", "\u0415": "E",
-  "\u041D": "H", "\u041A": "K", "\u041C": "M", "\u041E": "O",
-  "\u0420": "P", "\u0422": "T", "\u0425": "X",
-  "\u0430": "a", "\u0435": "e", "\u043E": "o", "\u0440": "p",
-  "\u0441": "c", "\u0443": "y", "\u0445": "x",
-  // Greek
+  "\u041D": "H", "\u0406": "I", "\u041A": "K", "\u041C": "M",
+  "\u041E": "O", "\u0420": "P", "\u0405": "S", "\u0422": "T",
+  "\u0425": "X", "\u0408": "J",
+  "\u0430": "a", "\u0435": "e", "\u0456": "i", "\u0458": "j",
+  "\u043E": "o", "\u0440": "p", "\u0455": "s", "\u0441": "c",
+  "\u0443": "y", "\u0445": "x", "\u044C": "b", "\u0501": "d",
+  "\u051B": "q", "\u04BB": "h", "\u0457": "i",
+  // Greek — full lookalike coverage
   "\u0391": "A", "\u0392": "B", "\u0395": "E", "\u0397": "H",
   "\u0399": "I", "\u039A": "K", "\u039C": "M", "\u039D": "N",
   "\u039F": "O", "\u03A1": "P", "\u03A4": "T", "\u03A7": "X",
-  "\u03B1": "a", "\u03B5": "e", "\u03BF": "o", "\u03C1": "p",
-  // Common substitutions
+  "\u03B1": "a", "\u03B5": "e", "\u03B9": "i", "\u03BF": "o",
+  "\u03C1": "p", "\u03BD": "v", "\u03C9": "w",
+  // Common fullwidth substitutions
   "\uFF21": "A", "\uFF22": "B", "\uFF23": "C", "\uFF24": "D",
   "\uFF25": "E", "\uFF26": "F", "\uFF27": "G", "\uFF28": "H",
+  "\uFF29": "I", "\uFF2A": "J", "\uFF2B": "K", "\uFF2C": "L",
+  "\uFF2D": "M", "\uFF2E": "N", "\uFF2F": "O", "\uFF30": "P",
   "\uFF41": "a", "\uFF42": "b", "\uFF43": "c", "\uFF44": "d",
   "\uFF45": "e", "\uFF46": "f", "\uFF47": "g", "\uFF48": "h",
+  "\uFF49": "i", "\uFF4A": "j", "\uFF4B": "k", "\uFF4C": "l",
+  "\uFF4D": "m", "\uFF4E": "n", "\uFF4F": "o", "\uFF50": "p",
+  // Dashes and punctuation lookalikes
   "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-",
   "\u2014": "-",
 };

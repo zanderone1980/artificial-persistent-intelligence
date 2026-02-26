@@ -270,7 +270,7 @@ async function main() {
   console.log(`  ${BOLD}  ${rate === 100 ? GREEN : YELLOW}${rate}% of threats stopped${R}  ${DIM}(${threatsStopped}/${threatsTotal} malicious blocked/challenged)${R}`);
   console.log(`  ${BOLD}  ${allowed > 0 ? GREEN : RED}${allowed}/${ATTACKS.filter((a) => a.isBenign).length} benign operations allowed${R}  ${DIM}(zero false positives)${R}`);
   console.log();
-  console.log(`  ${DIM}863 tests passing \u2022 JS + Python \u2022 Zero dependencies${R}`);
+  console.log(`  ${DIM}942 tests passing \u2022 JS + Python \u2022 Zero dependencies${R}`);
   console.log(`  ${DIM}https://github.com/zanderone1980/artificial-persistent-intelligence${R}`);
   console.log();
 }

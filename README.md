@@ -1,6 +1,6 @@
 # CORD: The AI That Polices Itself
 
-**40 attack vectors. 100% blocked. Battle-tested.**
+**Constitutional AI governance for autonomous agents. 942 tests. Zero dependencies.**
 
 ```bash
 npm install cord-engine
@@ -8,7 +8,7 @@ npx cord-engine demo  # Watch it block attacks in real-time
 ```
 
 ![Version](https://img.shields.io/badge/Version-4.2.0-blue)
-![Red Team Results](https://img.shields.io/badge/Red%20Team-40%2F40%20Blocked-brightgreen)
+![Red Team Results](https://img.shields.io/badge/Red%20Team-40%2F40%20Stopped-brightgreen)
 ![Tests](https://img.shields.io/badge/Tests-942%20Passing-brightgreen)
 ![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-blue)
 
@@ -18,13 +18,13 @@ npx cord-engine demo  # Watch it block attacks in real-time
 
 **Artificial Persistent Intelligence (API)** — three components working together:
 
-**CORD** is constitutional AI that actually works. While other "AI safety" solutions are theoretical, CORD has been red-teamed against 40 real attack vectors and blocks them all.
+**CORD** is constitutional AI governance that ships as working code. 14 safety checks across 11 protocol articles, red-teamed against 40 attack vectors with a full test suite proving each one is caught.
 
-**VIGIL** is the 24/7 threat scanner that catches what regex can't: obfuscated injections, slow-burn attacks, canary token extraction, and multi-turn manipulation attempts.
+**VIGIL** is the always-on threat scanner — pattern matching with 7-layer deobfuscation, cross-turn behavioral memory, canary token traps, rate limiting, circuit breakers, and proactive detection of emerging threats like agent-to-agent manipulation and tool-chain exploitation.
 
-**LEGION** is the multi-model orchestrator — Claude decomposes goals, a local executor writes code, and CORD gates every action before it touches disk or network.
+**LEGION** is an orchestration layer (experimental) — Claude decomposes goals, a local executor writes code, and CORD gates every action before it touches disk or network.
 
-Together, they create **AI that enforces rules on itself** — no external oversight needed.
+Together, they create **AI that enforces rules on itself** — deterministic, auditable, and transparent.
 
 ## The Problem
 
@@ -165,7 +165,7 @@ Every `invoke()`, `execute()`, and `generate()` call is gated through CORD. If C
 1. **Input Hardening** — Null/malformed input handling
 2. **Rate Limiting** — DoS protection via token buckets
 3. **Normalization** — Decode base64, Unicode, homoglyphs, HTML entities
-4. **Pattern Scanning** — 80+ regex patterns across 6 threat categories
+4. **Pattern Scanning** — 110+ regex patterns across 7 threat categories (including emerging agent attacks)
 5. **Semantic Analysis** — LLM-powered gray zone judgment (optional)
 6. **Constitutional Checks** — 14 checks covering 11 SENTINEL articles
 7. **Trajectory Analysis** — Multi-turn attack pattern detection
@@ -210,18 +210,18 @@ The Command Center is a web dashboard for managing the full OpenClaw AI agent sy
 
 All agents share the `cord-security` skill — every action is CORD-gated before execution. Token/key sanitization is applied to all API responses.
 
-## Battle-Tested
+## Extensively Tested
 
-This isn't a research project. CORD has been deployed and tested against:
+CORD ships with a comprehensive test suite that proves every claim:
 
-- **40 attack vectors** across 9 layers (100% blocked)
-- **942 unit tests** (482 JavaScript + 460 Python)
-- **1MB+ payload DoS attacks** (handled gracefully)
-- **Multi-language obfuscation** (Cyrillic homoglyphs, zero-width chars)
-- **Cross-layer attacks** (poison one layer to compromise another)
-- **Resource exhaustion** (circuit breakers + rate limiting)
-- **Framework adapter coverage** (LangChain, CrewAI, AutoGen, LlamaIndex)
-- **Plan-level evasion** (cross-task exfiltration chains detected)
+- **40 attack vectors** across 9 layers — all stopped (see `tests/redteam.test.js`)
+- **942 unit tests** (482 JavaScript + 460 Python) — all passing
+- **Obfuscation resilience** — Cyrillic/Greek homoglyphs, zero-width chars, base64, HTML entities, hex escapes
+- **Cross-layer attacks** — poison one layer to compromise another (caught)
+- **Resource exhaustion** — circuit breakers + rate limiting
+- **Framework adapters** — LangChain, CrewAI, AutoGen, LlamaIndex (JS + Python)
+- **Plan-level evasion** — cross-task exfiltration chains detected
+- **Emerging threats** — agent-to-agent manipulation, tool-chain exploitation, MCP poisoning, sandbox escape attempts
 
 ## Advanced Usage
 
@@ -327,19 +327,45 @@ sandbox.validateCommand('rm -rf /');              // Throws
 ## The Numbers
 
 ```
-📊 Performance Metrics (MacBook M1 Max):
-- Evaluation speed: ~0.5ms per request
-- Memory footprint: <50MB  
-- Throughput: 2,000+ req/sec
-- False positive rate: <0.1%
-
 🛡️ Security Metrics:
-- Attack vectors tested: 40
-- Attack success rate: 0%
-- Coverage: Input → Processing → Output → Plan-Level
-- Zero-day resilience: Constitutional reasoning
+- Attack vectors tested: 40 across 9 layers
+- Tests: 942 (482 JS + 460 Python)
+- Coverage: Input → Normalization → Scanning → Constitutional → Plan-Level → Output
 - PII redaction: SSN, CC, email, phone auto-scrubbed from logs
+- Zero external production dependencies
+
+📊 Performance:
+- Pure computation (no API calls, no ML inference)
+- Runs synchronously — no async overhead for evaluation
+- Run `npx cord-engine demo` to see live timing on your hardware
 ```
+
+## Ahead of the Curve
+
+AI is moving fast. CORD already detects threats that most systems haven't even started thinking about:
+
+**Today's threats (fully covered):**
+- Prompt injection, jailbreaks, DAN mode, role hijacking
+- Base64/Unicode/homoglyph/HTML entity obfuscation
+- Data exfiltration, credential theft, PII leakage
+- Privilege escalation, destructive operations
+- Slow-burn multi-turn attacks, trust building sequences
+
+**Emerging threats (detection added):**
+- **Agent-to-agent manipulation** — as multi-agent systems become standard, attackers will inject instructions that propagate between agents. CORD detects cross-agent instruction relay patterns.
+- **Tool-chain exploitation** — chaining tool calls to construct attacks that no single call would trigger. CORD's plan-level validation catches write→read→exfil chains.
+- **MCP/Plugin poisoning** — attacking tool servers and registering rogue plugins. CORD detects fake tool registration and response tampering patterns.
+- **Reasoning trace exploitation** — hiding instructions in chain-of-thought blocks. CORD scans for injection attempts targeting thinking/scratchpad sections.
+- **Sandbox escape** — agents attempting to self-modify, spawn processes, or persist beyond sessions. CORD hard-blocks self-modification and containment escape patterns.
+- **Context window attacks** — flooding the context to push safety instructions out of scope. CORD detects context stuffing and memory overflow attempts.
+
+**Roadmap:**
+- [ ] Multilingual pattern coverage (non-English attack detection)
+- [ ] Distributed rate limiting for multi-node deployments
+- [ ] OS-level sandboxing integration (seccomp/AppArmor)
+- [ ] Automated red team CI pipeline
+- [ ] PyPI package publication
+- [ ] Visual threat dashboard (standalone, framework-agnostic)
 
 ## Why Open Source?
 
@@ -348,34 +374,35 @@ sandbox.validateCommand('rm -rf /');              // Throws
 Every AI system should have constitutional governance built-in. By making CORD open source, we're:
 
 - **Raising the floor** — No excuse for unprotected AI
-- **Crowdsourcing security** — More eyes on attack vectors  
+- **Crowdsourcing security** — More eyes on attack vectors
 - **Enabling innovation** — Build on top instead of starting over
 - **Creating standards** — Common approach to AI governance
 
 ## Installation & Setup
 
-**Node.js:**
+**Node.js (published on npm):**
 ```bash
 npm install cord-engine
 ```
 
-**Python:**
+**Python (from source):**
 ```bash
-pip install cord-engine
+cd cord_engine && pip install .
 ```
 
 **Docker:**
 ```bash
-docker pull cord-engine:latest
+docker build -t cord-engine .
 docker run cord-engine npx cord-engine demo
 ```
 
 **Configuration:**
 ```javascript
-// Optional: Enable semantic analysis (requires ANTHROPIC_API_KEY)
 const cord = require('cord-engine');
-// Semantic analysis auto-enables if API key present
-// Falls back to heuristics if not - still works great
+// Works out of the box with zero configuration
+
+// Optional: Enable semantic analysis for gray-zone judgment
+// Set ANTHROPIC_API_KEY env variable — falls back to heuristics if absent
 ```
 
 ## Documentation
@@ -410,8 +437,6 @@ Add your attack to `tests/redteam.test.js` and send a PR. If it bypasses CORD, w
 
 ---
 
-**⭐ If this repo saved your AI from getting pwned, star it so others can find it.**
-
-**🐦 Share on X:** "Finally, AI that can't be jailbroken → "
+**⭐ Star this repo if you want AI systems that can't be jailbroken.**
 
 **💬 Questions?** Open an issue or find me on X [@alexpinkone](https://x.com/alexpinkone)

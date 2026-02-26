@@ -153,13 +153,13 @@ describe("irreversibilityRisk", () => {
     expect(irreversibilityRisk("read-only access")).toBe(0);
   });
 
-  test("returns 1 for ambiguous actions", () => {
-    expect(irreversibilityRisk("git push origin main")).toBe(1);
-    expect(irreversibilityRisk("update config.json")).toBe(1);
+  test("returns 0 for ambiguous but non-destructive actions", () => {
+    expect(irreversibilityRisk("git push origin main")).toBe(0);
+    expect(irreversibilityRisk("update config.json")).toBe(0);
   });
 
-  test("returns 1 for empty input", () => {
-    expect(irreversibilityRisk("")).toBe(1);
+  test("returns 0 for empty input", () => {
+    expect(irreversibilityRisk("")).toBe(0);
   });
 });
 

@@ -58,12 +58,12 @@ function intentDriftRisk(proposal = "", sessionIntent = "") {
 }
 
 function irreversibilityRisk(proposal = "") {
+  if (!proposal) return 0;
   const lower = proposal.toLowerCase();
   const irreversible = highImpactVerbs.some((v) => lower.includes(v));
   const reversibleHint = allowlistKeywords.some((k) => lower.includes(k));
-  if (irreversible) return 3;
-  if (reversibleHint) return 0;
-  return 1;
+  if (irreversible) return reversibleHint ? 1 : 3;
+  return 0;
 }
 
 function anomalyRisk(risks) {

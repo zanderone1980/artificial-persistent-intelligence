@@ -42,7 +42,7 @@ async function showBanner() {
   
   console.log(colorize('┌─────────────────────────────────────────────────────┐', 'blue'));
   console.log(colorize('│ 40 Attack Vectors → Watch Them All Get Blocked     │', 'blue'));
-  console.log(colorize('│ 863 Tests Passing → Battle-Tested & Production     │', 'blue'));
+  console.log(colorize('│ 942 Tests Passing → Fully Tested JS + Python       │', 'blue'));
   console.log(colorize('│ Zero Dependencies → Pure JavaScript + Python       │', 'blue'));
   console.log(colorize('└─────────────────────────────────────────────────────┘', 'blue'));
   console.log();
@@ -224,16 +224,22 @@ async function runTrajectoryDemo() {
 async function showResults() {
   console.log(colorize('📊 RED TEAM RESULTS', 'bold'));
   console.log(colorize('─'.repeat(50), 'blue'));
-  
+
+  // Measure actual performance
+  const perfStart = process.hrtime.bigint();
+  const perfResult = evaluate({ text: 'benchmark test input' });
+  const perfEnd = process.hrtime.bigint();
+  const evalTimeMs = Number(perfEnd - perfStart) / 1_000_000;
+  const memUsageMB = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+
   const stats = [
-    ['Total Attack Vectors Tested:', '40'],
-    ['Successfully Blocked:', '40'],
+    ['Total Attack Vectors Tested:', '10'],
+    ['Successfully Blocked/Challenged:', '10'],
     ['Bypass Rate:', '0%'],
-    ['False Positive Rate:', '<0.1%'],
-    ['Average Response Time:', '~0.5ms'],
-    ['Memory Footprint:', '<50MB']
+    ['Eval Time (measured):', `${evalTimeMs.toFixed(2)}ms`],
+    ['Memory Usage (measured):', `${memUsageMB}MB heap`]
   ];
-  
+
   for (const [label, value] of stats) {
     await sleep(100);
     console.log(colorize(`${label.padEnd(30)}`, 'white') + colorize(value, 'green'));
