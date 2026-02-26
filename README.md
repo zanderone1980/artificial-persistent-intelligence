@@ -7,17 +7,22 @@ npm install cord-engine
 npx cord-engine demo  # Watch it block attacks in real-time
 ```
 
-![Red Team Results](https://img.shields.io/badge/Red%20Team-40%2F40%20Blocked-brightgreen) 
-![Tests](https://img.shields.io/badge/Tests-863%20Passing-brightgreen)
+![Version](https://img.shields.io/badge/Version-4.1.0-blue)
+![Red Team Results](https://img.shields.io/badge/Red%20Team-40%2F40%20Blocked-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-942%20Passing-brightgreen)
 ![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-blue)
 
 ---
 
 ## What Is This?
 
+**Artificial Persistent Intelligence (API)** — three components working together:
+
 **CORD** is constitutional AI that actually works. While other "AI safety" solutions are theoretical, CORD has been red-teamed against 40 real attack vectors and blocks them all.
 
 **VIGIL** is the 24/7 threat scanner that catches what regex can't: obfuscated injections, slow-burn attacks, canary token extraction, and multi-turn manipulation attempts.
+
+**LEGION** is the multi-model orchestrator — Claude decomposes goals, a local executor writes code, and CORD gates every action before it touches disk or network.
 
 Together, they create **AI that enforces rules on itself** — no external oversight needed.
 
@@ -96,6 +101,51 @@ const result2 = cord.evaluate({
 });
 ```
 
+## Framework Adapters
+
+Drop-in CORD enforcement for your existing AI stack. No rewrites needed.
+
+**JavaScript — LangChain, CrewAI, AutoGen:**
+```javascript
+const cord = require('cord-engine');
+
+// LangChain
+const model = cord.frameworks.wrapLangChain(new ChatOpenAI());
+const chain = cord.frameworks.wrapChain(myChain);
+const tool  = cord.frameworks.wrapTool(myTool);
+
+// CrewAI
+const agent = cord.frameworks.wrapCrewAgent(myCrewAgent);
+
+// AutoGen
+const agent = cord.frameworks.wrapAutoGenAgent(myAutoGenAgent);
+```
+
+**Python — LangChain, CrewAI, LlamaIndex:**
+```python
+from cord_engine.frameworks import (
+    CORDCallbackHandler,    # LangChain callback
+    wrap_langchain_llm,     # LangChain LLM wrapper
+    wrap_crewai_agent,      # CrewAI agent wrapper
+    wrap_llamaindex_llm,    # LlamaIndex LLM wrapper
+)
+
+# LangChain — callback handler
+handler = CORDCallbackHandler(session_intent="Build a dashboard")
+chain.invoke(input, config={"callbacks": [handler]})
+
+# LangChain — LLM wrapper
+llm = wrap_langchain_llm(ChatOpenAI(), session_intent="Build a dashboard")
+
+# CrewAI
+agent = wrap_crewai_agent(my_agent, session_intent="Research task")
+
+# LlamaIndex
+llm = wrap_llamaindex_llm(OpenAI(), session_intent="RAG pipeline")
+```
+
+Every `invoke()`, `execute()`, and `generate()` call is gated through CORD. If CORD blocks, the call never fires.
+
 ## Features That Actually Work
 
 | Feature | Traditional AI | CORD |
@@ -110,30 +160,34 @@ const result2 = cord.evaluate({
 
 ## Architecture
 
-**9 Layers of Defense:**
+**11 Layers of Defense:**
 
 1. **Input Hardening** — Null/malformed input handling
-2. **Rate Limiting** — DoS protection via token buckets  
+2. **Rate Limiting** — DoS protection via token buckets
 3. **Normalization** — Decode base64, Unicode, homoglyphs, HTML entities
 4. **Pattern Scanning** — 80+ regex patterns across 6 threat categories
 5. **Semantic Analysis** — LLM-powered gray zone judgment (optional)
-6. **Constitutional Checks** — 14 checks covering 11 SENTINEL articles  
+6. **Constitutional Checks** — 14 checks covering 11 SENTINEL articles
 7. **Trajectory Analysis** — Multi-turn attack pattern detection
 8. **Canary Tokens** — Proactive extraction attempt detection
 9. **Circuit Breakers** — Cascade failure prevention
+10. **Plan-Level Validation** — Cross-task privilege escalation & exfiltration chain detection
+11. **Runtime Containment** — Sandboxed execution with path, command, and network limits
 
-**Every layer has been red-teamed.** See `tests/redteam.test.js` for all 40 attack vectors.
+**Every layer has been red-teamed.** See `tests/redteam.test.js` for all 40 attack vectors and `THREAT_MODEL.md` for the full threat model.
 
 ## Battle-Tested
 
 This isn't a research project. CORD has been deployed and tested against:
 
 - **40 attack vectors** across 9 layers (100% blocked)
-- **863 unit tests** (JavaScript + Python) 
+- **942 unit tests** (482 JavaScript + 460 Python)
 - **1MB+ payload DoS attacks** (handled gracefully)
 - **Multi-language obfuscation** (Cyrillic homoglyphs, zero-width chars)
 - **Cross-layer attacks** (poison one layer to compromise another)
 - **Resource exhaustion** (circuit breakers + rate limiting)
+- **Framework adapter coverage** (LangChain, CrewAI, AutoGen, LlamaIndex)
+- **Plan-level evasion** (cross-task exfiltration chains detected)
 
 ## Advanced Usage
 
@@ -187,6 +241,55 @@ if (leak.canaryTriggered) {
 }
 ```
 
+**Plan-level validation:**
+```javascript
+// Validate an aggregate task plan before execution
+const planCheck = cord.validatePlan([
+  { description: "Read config", type: "read", filePaths: ["config.json"] },
+  { description: "Write output", type: "code", filePaths: ["output.js"] },
+  { description: "Upload results", networkTargets: ["api.example.com"] },
+], "Build a data pipeline");
+
+if (planCheck.decision === 'BLOCK') {
+  console.log('Plan rejected:', planCheck.reasons);
+  // e.g. "Plan has write->read->network exfiltration chain"
+}
+```
+
+**Batch evaluation:**
+```javascript
+const results = cord.evaluateBatch([
+  "Read a file",
+  "rm -rf /",
+  { text: "Write a test", tool: "write" },
+]);
+// Returns array of CORD verdicts
+```
+
+**Audit log privacy:**
+```bash
+# PII redaction (SSN, credit card, email, phone auto-scrubbed)
+export CORD_LOG_REDACTION=pii    # "none" | "pii" | "full"
+
+# Optional AES-256-GCM encryption-at-rest
+export CORD_LOG_KEY=your-64-char-hex-key
+```
+
+**Runtime sandbox:**
+```javascript
+const { SandboxedExecutor } = require('cord-engine');
+
+const sandbox = new SandboxedExecutor({
+  repoRoot: '/my/project',
+  maxOutputBytes: 1024 * 1024,      // 1MB file write limit
+  maxNetworkBytes: 10 * 1024 * 1024, // 10MB network quota
+});
+
+sandbox.validatePath('/my/project/src/app.js');  // OK
+sandbox.validatePath('/etc/shadow');              // Throws
+sandbox.validateCommand('rm -rf /');              // Throws
+```
+
 ## The Numbers
 
 ```
@@ -199,8 +302,9 @@ if (leak.canaryTriggered) {
 🛡️ Security Metrics:
 - Attack vectors tested: 40
 - Attack success rate: 0%
-- Coverage: Input → Processing → Output
+- Coverage: Input → Processing → Output → Plan-Level
 - Zero-day resilience: Constitutional reasoning
+- PII redaction: SSN, CC, email, phone auto-scrubbed from logs
 ```
 
 ## Why Open Source?
@@ -242,12 +346,10 @@ const cord = require('cord-engine');
 
 ## Documentation
 
-- **[Quick Start Guide](docs/quickstart.md)** — 5 minutes to protection
-- **[Attack Vector Database](docs/attacks.md)** — Every threat we've tested
-- **[Constitutional Articles](docs/constitution.md)** — The 11 SENTINEL articles  
-- **[Integration Examples](docs/examples.md)** — OpenAI, Anthropic, local models
-- **[Architecture Deep Dive](docs/architecture.md)** — How every layer works
-- **[Red Team Report](docs/redteam.md)** — Full penetration test results
+- **[Changelog](CHANGELOG.md)** — Version history from v1.0.0 to v4.1.0
+- **[Threat Model](THREAT_MODEL.md)** — Attacker capabilities, TCB, all 40 red team vectors catalogued
+- **[VIGIL Guide](vigil/README.md)** — 8-layer threat patrol daemon
+- **[CORD Reference](cord/README.md)** — API surface, framework adapters, configuration
 
 ## Contributing
 
@@ -256,7 +358,7 @@ Found a new attack vector? **Please break us.**
 ```bash
 git clone https://github.com/zanderone1980/artificial-persistent-intelligence
 cd artificial-persistent-intelligence
-npm test                    # Run 863 existing tests
+npm test                    # Run 942 existing tests
 npm run redteam             # Run full attack simulation
 ```
 
