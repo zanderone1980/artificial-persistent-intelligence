@@ -12,7 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   - In-browser agent workspace editor (SOUL.md, IDENTITY.md, etc.)
   - Token/key sanitization on all API responses
 - **Multi-agent system** — 4 specialized agents managed through OpenClaw
-  - Lazarus (⚡ main), Pink (🩷 brand ops), Sentinel (🛡️ security), Pixel (📱 social media)
+  - Lazarus (⚡ main), Pink (🩷 brand ops), Warden (🛡️ security), Pixel (📱 social media)
 - **Pixel social media agent** — Twitter/X, Instagram, TikTok content management
   - Social posting skill with Twitter API v2 integration
   - Content creator skill with brand voice guide and caption templates

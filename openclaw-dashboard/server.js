@@ -23,11 +23,24 @@ const OC_AGENTS_DIR  = path.join(OC_ROOT, "agents");
 const OC_SKILLS_DIR  = path.join(OC_ROOT, "skills");
 const OC_CRON        = path.join(OC_ROOT, "cron", "jobs.json");
 const OC_DEVICES     = path.join(OC_ROOT, "devices", "paired.json");
-const OC_GW_LOG      = path.join(OC_ROOT, "logs", "gateway.log");
 const OC_AUDIT_LOG   = path.join(OC_ROOT, "logs", "config-audit.jsonl");
 const BUNDLED_SKILLS = "/opt/homebrew/lib/node_modules/openclaw/skills";
 const REPO_ROOT      = path.resolve(__dirname, "..");
 const CORD_LOG       = path.join(REPO_ROOT, "cord", "cord.log.jsonl");
+
+// Gateway writes structured JSON logs to /tmp/openclaw/ with date-stamped files
+const OC_GW_LOG_DIR  = "/tmp/openclaw";
+
+/** Find the most recent gateway log file. OpenClaw writes to /tmp/openclaw/openclaw-YYYY-MM-DD.log */
+function getActiveGatewayLog() {
+  try {
+    const files = fs.readdirSync(OC_GW_LOG_DIR)
+      .filter(f => f.startsWith("openclaw-") && f.endsWith(".log"))
+      .sort()
+      .reverse();
+    return files.length ? path.join(OC_GW_LOG_DIR, files[0]) : null;
+  } catch { return null; }
+}
 
 // ── CLI args ───────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -228,10 +241,36 @@ function getDevices() {
 }
 
 function getLogs(count = 50) {
+  const logFile = getActiveGatewayLog();
+  if (!logFile) return [];
   try {
-    const content = fs.readFileSync(OC_GW_LOG, "utf8");
-    const lines = content.split("\n").filter(Boolean);
-    return lines.slice(-count);
+    // Read the last chunk of the file (avoid loading 38MB+ into memory)
+    const stat = fs.statSync(logFile);
+    const readSize = Math.min(stat.size, 512 * 1024); // last 512KB
+    const fd = fs.openSync(logFile, "r");
+    const buf = Buffer.alloc(readSize);
+    fs.readSync(fd, buf, 0, readSize, Math.max(0, stat.size - readSize));
+    fs.closeSync(fd);
+    const raw = buf.toString("utf8");
+    const lines = raw.split("\n").filter(Boolean);
+
+    // Parse structured JSON log lines → readable strings
+    const parsed = [];
+    for (const line of lines) {
+      try {
+        const entry = JSON.parse(line);
+        const time = entry.time || entry._meta?.date || "";
+        const level = entry._meta?.logLevelName || "INFO";
+        const subsystem = (entry["0"] || "").replace(/[{}"\s]/g, "").replace("subsystem:", "");
+        const msg = entry["1"] || "";
+        const ts = time ? new Date(time).toLocaleTimeString("en-US", { hour12: false }) : "";
+        parsed.push(`${ts} [${level}] [${subsystem}] ${msg}`);
+      } catch {
+        // Not JSON — use line as-is (fallback for plain-text log files)
+        parsed.push(line);
+      }
+    }
+    return parsed.slice(-count);
   } catch { return []; }
 }
 
@@ -298,24 +337,53 @@ if (fileExists(CORD_LOG)) {
   });
 }
 
-// Watch gateway log
-let gwSize = fileExists(OC_GW_LOG) ? fs.statSync(OC_GW_LOG).size : 0;
-if (fileExists(OC_GW_LOG)) {
-  fs.watchFile(OC_GW_LOG, { interval: 1000 }, (curr) => {
+// Watch gateway log — find the real active log in /tmp/openclaw/
+let gwLogFile = getActiveGatewayLog();
+let gwSize = (gwLogFile && fileExists(gwLogFile)) ? fs.statSync(gwLogFile).size : 0;
+
+function watchGatewayLog() {
+  if (!gwLogFile || !fileExists(gwLogFile)) {
+    gwLogFile = getActiveGatewayLog();
+    if (!gwLogFile) return;
+    gwSize = fs.statSync(gwLogFile).size;
+  }
+  fs.watchFile(gwLogFile, { interval: 1000 }, (curr) => {
     if (curr.size <= gwSize) return;
     try {
-      const fd = fs.openSync(OC_GW_LOG, "r");
+      const fd = fs.openSync(gwLogFile, "r");
       const buf = Buffer.alloc(curr.size - gwSize);
       fs.readSync(fd, buf, 0, buf.length, gwSize);
       fs.closeSync(fd);
       gwSize = curr.size;
       const lines = buf.toString("utf8").split("\n").filter(Boolean);
       for (const line of lines) {
-        broadcastSSE("log", line);
+        try {
+          const entry = JSON.parse(line);
+          const time = entry.time || entry._meta?.date || "";
+          const level = entry._meta?.logLevelName || "INFO";
+          const subsystem = (entry["0"] || "").replace(/[{}"\s]/g, "").replace("subsystem:", "");
+          const msg = entry["1"] || "";
+          const ts = time ? new Date(time).toLocaleTimeString("en-US", { hour12: false }) : "";
+          broadcastSSE("log", `${ts} [${level}] [${subsystem}] ${msg}`);
+        } catch {
+          broadcastSSE("log", line);
+        }
       }
     } catch {}
   });
 }
+watchGatewayLog();
+
+// Re-check for new log file at midnight (new date = new file)
+setInterval(() => {
+  const newFile = getActiveGatewayLog();
+  if (newFile && newFile !== gwLogFile) {
+    if (gwLogFile) fs.unwatchFile(gwLogFile);
+    gwLogFile = newFile;
+    gwSize = fileExists(gwLogFile) ? fs.statSync(gwLogFile).size : 0;
+    watchGatewayLog();
+  }
+}, 60000);
 
 // ── HTTP Server ────────────────────────────────────────────────────────────
 const STATIC_DIR = __dirname;
@@ -467,5 +535,5 @@ server.listen(PORT, () => {
   console.log(`   http://localhost:${PORT}`);
   console.log(`   Config: ${OC_CONFIG}`);
   console.log(`   CORD log: ${CORD_LOG}`);
-  console.log(`   Gateway log: ${OC_GW_LOG}\n`);
+  console.log(`   Gateway log: ${gwLogFile || "none found"}\n`);
 });
