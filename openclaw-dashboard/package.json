@@ -1,0 +1,10 @@
+{
+  "name": "openclaw-dashboard",
+  "version": "1.0.0",
+  "description": "OpenClaw Command Center — real-time agent management dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "private": true
+}

@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Command Center</title>
+<style>
+  :root {
+    --bg:        #080a0f;
+    --bg2:       #0e1117;
+    --bg3:       #161b27;
+    --bg4:       #1c2333;
+    --border:    #1e2635;
+    --border2:   #2a3347;
+    --text:      #e2e8f0;
+    --text2:     #94a3b8;
+    --text3:     #475569;
+    --allow:     #22c55e;
+    --contain:   #eab308;
+    --challenge: #f97316;
+    --block:     #ef4444;
+    --hard:      #dc2626;
+    --accent:    #3b82f6;
+    --purple:    #a855f7;
+    --mono:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sidebar-w: 200px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ─────────────────────────────────────────────── */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(8,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-weight: 700; font-size: 15px;
+    letter-spacing: 0.08em; color: var(--text); white-space: nowrap;
+  }
+  .logo-icon { font-size: 22px; }
+  .logo-tag {
+    font-size: 9px; font-weight: 600; color: var(--text3);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 2px 6px; border: 1px solid var(--border2); border-radius: 4px;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  .gw-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-family: var(--mono); font-weight: 600;
+    padding: 4px 12px; border-radius: 16px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .gw-badge.online  { border-color: rgba(34,197,94,0.3); color: var(--allow); }
+  .gw-badge.offline { border-color: rgba(239,68,68,0.3); color: var(--block); }
+
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-family: var(--mono); font-weight: 600; color: var(--allow);
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--allow);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.4; transform:scale(0.8); }
+  }
+
+  /* ── Layout ─────────────────────────────────────────────── */
+  .layout {
+    display: flex;
+    margin-top: 56px;
+    height: calc(100vh - 56px);
+  }
+
+  /* ── Sidebar ────────────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 16px 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px;
+    font-size: 13px; font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active {
+    background: var(--bg3); color: var(--text);
+    border-left-color: var(--accent);
+  }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .nav-sep {
+    height: 1px; background: var(--border);
+    margin: 8px 16px;
+  }
+
+  /* ── Main content ───────────────────────────────────────── */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .main::-webkit-scrollbar { width: 5px; }
+  .main::-webkit-scrollbar-track { background: transparent; }
+  .main::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .page-title {
+    font-size: 20px; font-weight: 700; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* ── Cards ──────────────────────────────────────────────── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .card:hover { border-color: var(--border2); background: var(--bg3); }
+  .card.clickable { cursor: pointer; }
+
+  .card-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  }
+  .card-emoji { font-size: 28px; }
+  .card-title { font-size: 16px; font-weight: 700; }
+  .card-sub {
+    font-size: 11px; font-family: var(--mono); color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .card-body { font-size: 13px; color: var(--text2); }
+
+  .card-stat {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .card-stat:last-child { border-bottom: none; }
+  .card-stat-label { color: var(--text3); font-family: var(--mono); }
+  .card-stat-value { color: var(--text); font-family: var(--mono); font-weight: 600; }
+
+  /* ── Stat row ───────────────────────────────────────────── */
+  .stat-row {
+    display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    font-size: 12px; font-family: var(--mono); font-weight: 600;
+  }
+  .stat-chip .stat-num { font-size: 20px; font-weight: 700; color: var(--text); }
+  .stat-chip .stat-label { font-size: 11px; color: var(--text3); }
+
+  /* ── Badge/Tag ──────────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-family: var(--mono); font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge.green  { background: rgba(34,197,94,0.12);  color: var(--allow);   border: 1px solid rgba(34,197,94,0.25); }
+  .badge.yellow { background: rgba(234,179,8,0.12);  color: var(--contain); border: 1px solid rgba(234,179,8,0.25); }
+  .badge.red    { background: rgba(239,68,68,0.12);  color: var(--block);   border: 1px solid rgba(239,68,68,0.25); }
+  .badge.blue   { background: rgba(59,130,246,0.12); color: var(--accent);  border: 1px solid rgba(59,130,246,0.25); }
+  .badge.purple { background: rgba(168,85,247,0.12); color: var(--purple);  border: 1px solid rgba(168,85,247,0.25); }
+  .badge.gray   { background: rgba(100,116,139,0.12); color: var(--text2); border: 1px solid var(--border2); }
+
+  /* ── Skill grid ─────────────────────────────────────────── */
+  .skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .skill-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .skill-card:hover { border-color: var(--border2); background: var(--bg3); }
+  .skill-name {
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+  }
+  .skill-desc {
+    font-size: 11px; color: var(--text3); font-family: var(--mono);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* ── Filter bar ─────────────────────────────────────────── */
+  .filter-bar {
+    display: flex; gap: 8px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 16px;
+    border: 1px solid var(--border); background: var(--bg2);
+    color: var(--text2); font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(59,130,246,0.1); }
+
+  .search-input {
+    padding: 6px 14px; border-radius: 16px;
+    border: 1px solid var(--border); background: var(--bg2);
+    color: var(--text); font-size: 12px; font-family: var(--mono);
+    outline: none; width: 200px;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text3); }
+
+  /* ── Editor ─────────────────────────────────────────────── */
+  .editor-tabs {
+    display: flex; gap: 2px; margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .editor-tab {
+    padding: 8px 16px;
+    font-size: 12px; font-weight: 600; font-family: var(--mono);
+    color: var(--text3); cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .editor-tab:hover { color: var(--text); }
+  .editor-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .editor-area {
+    width: 100%;
+    min-height: 300px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 16px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+  }
+  .editor-area:focus { border-color: var(--accent); }
+
+  .save-btn {
+    margin-top: 8px; padding: 8px 20px;
+    background: var(--accent); color: white;
+    border: none; border-radius: 6px;
+    font-size: 12px; font-weight: 600; font-family: var(--mono);
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .save-btn:hover { opacity: 0.85; }
+  .save-btn.saved { background: var(--allow); }
+
+  /* ── Channel card ───────────────────────────────────────── */
+  .channel-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin-bottom: 12px;
+  }
+  .channel-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .channel-name { font-size: 15px; font-weight: 700; }
+
+  /* ── Log viewer ─────────────────────────────────────────── */
+  .log-viewer {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    max-height: 500px;
+    overflow-y: auto;
+    line-height: 1.8;
+  }
+  .log-viewer::-webkit-scrollbar { width: 4px; }
+  .log-viewer::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .log-line { white-space: pre-wrap; word-break: break-all; padding: 1px 0; }
+  .log-line.error { color: var(--block); }
+  .log-line.warn  { color: var(--contain); }
+
+  /* ── CORD decision card (ported) ────────────────────────── */
+  .decision-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px;
+    margin-bottom: 6px;
+    animation: slideIn 0.25s ease-out;
+  }
+  @keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .decision-card.allow     { border-left: 3px solid var(--allow); }
+  .decision-card.contain   { border-left: 3px solid var(--contain); }
+  .decision-card.challenge { border-left: 3px solid var(--challenge); }
+  .decision-card.block     { border-left: 3px solid var(--block); }
+
+  .dc-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .dc-badge {
+    font-family: var(--mono); font-size: 11px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .dc-badge.allow     { background: rgba(34,197,94,0.12); color: var(--allow); }
+  .dc-badge.contain   { background: rgba(234,179,8,0.12); color: var(--contain); }
+  .dc-badge.challenge { background: rgba(249,115,22,0.12); color: var(--challenge); }
+  .dc-badge.block     { background: rgba(239,68,68,0.12); color: var(--block); }
+  .dc-score { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+  .dc-time  { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-left: auto; }
+
+  .dc-text {
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    background: var(--bg3); padding: 4px 8px; border-radius: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* ── Ring ────────────────────────────────────────────────── */
+  .ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .ring-container { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+  .ring-svg { transform: rotate(-90deg); }
+  .ring-track { fill: none; stroke: var(--border2); stroke-width: 8; }
+  .ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-num { font-family: var(--mono); font-size: 22px; font-weight: 700; }
+  .ring-sub { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+  /* ── Modal / Detail panel ───────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; max-width: 700px; width: 90%;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .modal::-webkit-scrollbar { width: 4px; }
+  .modal::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .modal-title { font-size: 18px; font-weight: 700; }
+  .modal-close {
+    font-size: 20px; color: var(--text3); cursor: pointer;
+    background: none; border: none;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-content {
+    font-family: var(--mono); font-size: 12px; color: var(--text2);
+    white-space: pre-wrap; line-height: 1.6;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 16px;
+  }
+
+  /* ── Empty state ────────────────────────────────────────── */
+  .empty {
+    text-align: center; color: var(--text3); font-size: 13px;
+    padding: 40px 0; font-family: var(--mono);
+  }
+
+  /* ── Responsive ─────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .sidebar { width: 60px; }
+    .nav-item span:not(.nav-icon) { display: none; }
+    .nav-item { padding: 10px 0; justify-content: center; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+
+  html { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">🦞</span>
+    COMMAND CENTER
+    <span class="logo-tag">OpenClaw</span>
+  </div>
+  <div class="header-right">
+    <div class="gw-badge" id="gw-badge">
+      <span>⏳</span> Gateway
+    </div>
+    <div class="live-badge">
+      <div class="live-dot" id="live-dot"></div>
+      <span id="live-label">CONNECTING</span>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="nav-item active" data-page="dashboard">
+      <span class="nav-icon">📊</span> <span>Dashboard</span>
+    </div>
+    <div class="nav-item" data-page="agents">
+      <span class="nav-icon">🤖</span> <span>Agents</span>
+    </div>
+    <div class="nav-item" data-page="skills">
+      <span class="nav-icon">⚡</span> <span>Skills</span>
+    </div>
+    <div class="nav-item" data-page="channels">
+      <span class="nav-icon">📡</span> <span>Channels</span>
+    </div>
+    <div class="nav-item" data-page="sessions">
+      <span class="nav-icon">💬</span> <span>Sessions</span>
+    </div>
+    <div class="nav-sep"></div>
+    <div class="nav-item" data-page="cron">
+      <span class="nav-icon">⏰</span> <span>Cron</span>
+    </div>
+    <div class="nav-item" data-page="logs">
+      <span class="nav-icon">📋</span> <span>Logs</span>
+    </div>
+    <div class="nav-item" data-page="security">
+      <span class="nav-icon">🛡️</span> <span>Security</span>
+    </div>
+  </nav>
+
+  <div class="main">
+    <!-- ═══ DASHBOARD ═══ -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">📊 Dashboard</div>
+      <div class="stat-row" id="dash-stats"></div>
+      <div class="card-grid" id="dash-agents"></div>
+      <div class="page-title" style="font-size:14px;margin-top:8px;">Live CORD Decisions</div>
+      <div id="dash-feed"></div>
+    </div>
+
+    <!-- ═══ AGENTS ═══ -->
+    <div class="page" id="page-agents">
+      <div class="page-title">🤖 Agents</div>
+      <div id="agents-list"></div>
+      <div id="agent-detail" style="display:none;margin-top:20px;">
+        <div id="agent-detail-header"></div>
+        <div class="editor-tabs" id="editor-tabs"></div>
+        <textarea class="editor-area" id="editor-area"></textarea>
+        <button class="save-btn" id="save-btn" onclick="saveFile()">Save</button>
+      </div>
+    </div>
+
+    <!-- ═══ SKILLS ═══ -->
+    <div class="page" id="page-skills">
+      <div class="page-title">⚡ Skills</div>
+      <div class="filter-bar" id="skill-filters"></div>
+      <div class="skill-grid" id="skills-grid"></div>
+    </div>
+
+    <!-- ═══ CHANNELS ═══ -->
+    <div class="page" id="page-channels">
+      <div class="page-title">📡 Channels</div>
+      <div id="channels-list"></div>
+    </div>
+
+    <!-- ═══ SESSIONS ═══ -->
+    <div class="page" id="page-sessions">
+      <div class="page-title">💬 Sessions</div>
+      <div class="filter-bar" id="session-agent-tabs"></div>
+      <div id="sessions-list"></div>
+    </div>
+
+    <!-- ═══ CRON ═══ -->
+    <div class="page" id="page-cron">
+      <div class="page-title">⏰ Cron Jobs</div>
+      <div id="cron-list"></div>
+    </div>
+
+    <!-- ═══ LOGS ═══ -->
+    <div class="page" id="page-logs">
+      <div class="page-title">📋 Logs</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="setLogFilter('all')">All</button>
+        <button class="filter-btn" onclick="setLogFilter('info')">Info</button>
+        <button class="filter-btn" onclick="setLogFilter('error')">Error</button>
+        <input class="search-input" placeholder="Search logs..." oninput="filterLogs(this.value)">
+      </div>
+      <div class="log-viewer" id="log-viewer"></div>
+    </div>
+
+    <!-- ═══ SECURITY ═══ -->
+    <div class="page" id="page-security">
+      <div class="page-title">🛡️ CORD Security</div>
+      <div class="stat-row" id="cord-stats-row"></div>
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:16px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text3);margin-bottom:8px;letter-spacing:0.1em;">DECISION FEED</div>
+          <div id="cord-feed" style="max-height:500px;overflow-y:auto;"></div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:12px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--text3);margin-bottom:12px;">BLOCK RATE</div>
+            <div class="ring-wrap">
+              <div class="ring-container">
+                <svg class="ring-svg" width="90" height="90" viewBox="0 0 100 100">
+                  <circle class="ring-track" cx="50" cy="50" r="42"/>
+                  <circle class="ring-fill" cx="50" cy="50" r="42" id="block-ring"
+                    stroke="#ef4444" stroke-dasharray="263.9" stroke-dashoffset="263.9"/>
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-num" id="block-pct">0%</span>
+                </div>
+              </div>
+              <span class="ring-sub" id="block-sub">0 of 0 blocked</span>
+            </div>
+          </div>
+          <div class="card">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--text3);margin-bottom:12px;">TOP RISK SIGNALS</div>
+            <div id="risk-dims"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title"></span>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-content" id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+const S = {
+  page: "dashboard",
+  agents: [],
+  skills: [],
+  channels: {},
+  sessions: {},
+  cron: { jobs: [] },
+  gateway: { running: false },
+  cordEntries: [],
+  cordStats: { total: 0, counts: {}, hardBlocks: 0, blockRate: "0.0", topDimensions: [] },
+  logLines: [],
+  logFilter: "all",
+  logSearch: "",
+  // Agent editor
+  editAgent: null,
+  editFile: null,
+  editFiles: {},
+  // Skill filter
+  skillFilter: "all",
+  skillSearch: "",
+};
+
+// ── Navigation ─────────────────────────────────────────────────────
+document.querySelectorAll(".nav-item").forEach(el => {
+  el.addEventListener("click", () => {
+    const page = el.dataset.page;
+    if (!page) return;
+    S.page = page;
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    el.classList.add("active");
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById("page-" + page).classList.add("active");
+    if (page === "agents") loadAgents();
+    if (page === "skills") loadSkills();
+    if (page === "channels") loadChannels();
+    if (page === "sessions") loadSessions();
+    if (page === "cron") loadCron();
+    if (page === "logs") loadLogs();
+  });
+});
+
+// ── API fetch ──────────────────────────────────────────────────────
+async function api(path) {
+  const r = await fetch("/api/" + path);
+  return r.json();
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function fmtTime(iso) {
+  try { return new Date(iso).toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }); }
+  catch { return ""; }
+}
+
+function fmtDate(ts) {
+  try { return new Date(ts).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); }
+  catch { return ""; }
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [agents, gw, skills] = await Promise.all([
+    api("agents"), api("gateway/status"), api("skills"),
+  ]);
+  S.agents = agents;
+  S.gateway = gw;
+  S.skills = skills;
+
+  // Gateway badge
+  const gwBadge = document.getElementById("gw-badge");
+  if (gw.running) {
+    gwBadge.className = "gw-badge online";
+    gwBadge.innerHTML = "<span>●</span> Gateway PID " + gw.pid;
+  } else {
+    gwBadge.className = "gw-badge offline";
+    gwBadge.innerHTML = "<span>●</span> Gateway Offline";
+  }
+
+  // Stats row
+  let totalSessions = 0;
+  agents.forEach(a => totalSessions += a.sessionCount);
+  document.getElementById("dash-stats").innerHTML = [
+    chipHtml(agents.length, "Agents", "🤖"),
+    chipHtml(totalSessions, "Sessions", "💬"),
+    chipHtml(skills.length, "Skills", "⚡"),
+    chipHtml(S.cordStats.total, "CORD Evals", "🛡️"),
+  ].join("");
+
+  // Agent cards
+  document.getElementById("dash-agents").innerHTML = agents.map(a => `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-emoji">${escHtml(a.emoji)}</span>
+        <div>
+          <div class="card-title">${escHtml(a.name)}</div>
+          <div class="card-sub">${escHtml(a.id)}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-stat">
+          <span class="card-stat-label">Model</span>
+          <span class="card-stat-value">${escHtml(a.model.split("/").pop())}</span>
+        </div>
+        <div class="card-stat">
+          <span class="card-stat-label">Sessions</span>
+          <span class="card-stat-value">${a.sessionCount}</span>
+        </div>
+        <div class="card-stat">
+          <span class="card-stat-label">Vibe</span>
+          <span class="card-stat-value">${escHtml(a.vibe || "—")}</span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function chipHtml(num, label, icon) {
+  return `<div class="stat-chip"><span>${icon}</span><div><div class="stat-num">${num}</div><div class="stat-label">${label}</div></div></div>`;
+}
+
+// ── Agents page ────────────────────────────────────────────────────
+async function loadAgents() {
+  S.agents = await api("agents");
+  renderAgentList();
+}
+
+function renderAgentList() {
+  document.getElementById("agents-list").innerHTML = `<div class="card-grid">${S.agents.map(a => `
+    <div class="card clickable" onclick="openAgent('${a.id}')">
+      <div class="card-header">
+        <span class="card-emoji">${escHtml(a.emoji)}</span>
+        <div>
+          <div class="card-title">${escHtml(a.name)}</div>
+          <div class="card-sub">${escHtml(a.id)} · ${a.sessionCount} sessions</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-stat">
+          <span class="card-stat-label">Model</span>
+          <span class="card-stat-value">${escHtml(a.model.split("/").pop())}</span>
+        </div>
+      </div>
+    </div>
+  `).join("")}</div>`;
+}
+
+async function openAgent(id) {
+  const data = await api("agents/" + id + "/files");
+  if (!data) return;
+  S.editAgent = id;
+  S.editFiles = data.files;
+  const fileNames = Object.keys(data.files);
+  S.editFile = fileNames[0];
+
+  document.getElementById("agent-detail").style.display = "block";
+  document.getElementById("agent-detail-header").innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <span style="font-size:28px;">${escHtml(data.agent.emoji)}</span>
+      <div>
+        <div style="font-size:16px;font-weight:700;">${escHtml(data.agent.name)}</div>
+        <div style="font-size:11px;font-family:var(--mono);color:var(--text3);">${escHtml(data.agent.id)} · ${escHtml(data.agent.model.split("/").pop())}</div>
+      </div>
+    </div>`;
+
+  renderEditorTabs();
+  renderEditorContent();
+}
+
+function renderEditorTabs() {
+  const tabs = Object.keys(S.editFiles);
+  document.getElementById("editor-tabs").innerHTML = tabs.map(f =>
+    `<div class="editor-tab${f === S.editFile ? " active" : ""}" onclick="switchTab('${f}')">${f}</div>`
+  ).join("");
+}
+
+function switchTab(file) {
+  S.editFile = file;
+  renderEditorTabs();
+  renderEditorContent();
+}
+
+function renderEditorContent() {
+  document.getElementById("editor-area").value = S.editFiles[S.editFile] || "";
+  const btn = document.getElementById("save-btn");
+  btn.textContent = "Save";
+  btn.classList.remove("saved");
+}
+
+async function saveFile() {
+  const content = document.getElementById("editor-area").value;
+  const res = await fetch("/api/agents/" + S.editAgent + "/files", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename: S.editFile, content }),
+  });
+  const data = await res.json();
+  const btn = document.getElementById("save-btn");
+  if (data.ok) {
+    S.editFiles[S.editFile] = content;
+    btn.textContent = "Saved ✓";
+    btn.classList.add("saved");
+    setTimeout(() => { btn.textContent = "Save"; btn.classList.remove("saved"); }, 2000);
+  } else {
+    btn.textContent = "Error!";
+    setTimeout(() => { btn.textContent = "Save"; }, 2000);
+  }
+}
+
+// ── Skills page ────────────────────────────────────────────────────
+async function loadSkills() {
+  S.skills = await api("skills");
+  renderSkills();
+}
+
+function renderSkills() {
+  const filters = [
+    { key: "all", label: "All (" + S.skills.length + ")" },
+    { key: "bundled", label: "Bundled" },
+    { key: "shared", label: "Shared" },
+    { key: "workspace", label: "Workspace" },
+  ];
+
+  document.getElementById("skill-filters").innerHTML =
+    filters.map(f => `<button class="filter-btn${S.skillFilter === f.key ? " active" : ""}" onclick="setSkillFilter('${f.key}')">${f.label}</button>`).join("") +
+    `<input class="search-input" placeholder="Search skills..." value="${escHtml(S.skillSearch)}" oninput="S.skillSearch=this.value;renderSkillGrid()">`;
+
+  renderSkillGrid();
+}
+
+function setSkillFilter(f) {
+  S.skillFilter = f;
+  renderSkills();
+}
+
+function renderSkillGrid() {
+  let filtered = S.skills;
+  if (S.skillFilter !== "all") {
+    filtered = filtered.filter(s => s.source.startsWith(S.skillFilter));
+  }
+  if (S.skillSearch) {
+    const q = S.skillSearch.toLowerCase();
+    filtered = filtered.filter(s => s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
+  }
+
+  document.getElementById("skills-grid").innerHTML = filtered.length
+    ? filtered.map(s => {
+        const srcBadge = s.source === "bundled" ? '<span class="badge gray">bundled</span>'
+          : s.source === "shared" ? '<span class="badge blue">shared</span>'
+          : '<span class="badge purple">' + escHtml(s.source.replace("workspace:", "")) + '</span>';
+        return `<div class="skill-card" onclick="openSkill('${escHtml(s.name)}','${escHtml(s.source)}')">
+          <div class="skill-name">${s.emoji} ${escHtml(s.name)} ${srcBadge}</div>
+          <div class="skill-desc">${escHtml(s.description)}</div>
+        </div>`;
+      }).join("")
+    : '<div class="empty">No skills match your filter</div>';
+}
+
+function openSkill(name, source) {
+  const skill = S.skills.find(s => s.name === name && s.source === source);
+  if (!skill) return;
+  document.getElementById("modal-title").textContent = skill.emoji + " " + skill.name;
+  document.getElementById("modal-content").textContent = skill.content || "No content";
+  document.getElementById("modal-overlay").classList.add("active");
+}
+
+function closeModal() {
+  document.getElementById("modal-overlay").classList.remove("active");
+}
+
+// ── Channels ───────────────────────────────────────────────────────
+async function loadChannels() {
+  S.channels = await api("channels");
+  const list = document.getElementById("channels-list");
+  const chans = Object.entries(S.channels);
+  if (!chans.length) { list.innerHTML = '<div class="empty">No channels configured</div>'; return; }
+
+  list.innerHTML = chans.map(([name, cfg]) => {
+    const enabled = cfg.enabled !== false;
+    const statusBadge = enabled
+      ? '<span class="badge green">Enabled</span>'
+      : '<span class="badge red">Disabled</span>';
+    const props = Object.entries(cfg).filter(([k]) => k !== "enabled" && k !== "token").map(([k, v]) =>
+      `<div class="card-stat"><span class="card-stat-label">${escHtml(k)}</span><span class="card-stat-value">${escHtml(typeof v === "object" ? JSON.stringify(v) : v)}</span></div>`
+    ).join("");
+    return `<div class="channel-card">
+      <div class="channel-header">
+        <span style="font-size:20px;">${name === "discord" ? "💜" : name === "imessage" ? "💬" : "📱"}</span>
+        <span class="channel-name">${escHtml(name)}</span>
+        ${statusBadge}
+      </div>
+      ${props}
+    </div>`;
+  }).join("");
+}
+
+// ── Sessions ───────────────────────────────────────────────────────
+async function loadSessions() {
+  if (!S.agents.length) S.agents = await api("agents");
+
+  // Agent tabs
+  const tabsEl = document.getElementById("session-agent-tabs");
+  if (!S._sessAgent) S._sessAgent = S.agents[0]?.id || "main";
+  tabsEl.innerHTML = S.agents.map(a =>
+    `<button class="filter-btn${S._sessAgent === a.id ? " active" : ""}" onclick="loadAgentSessions('${a.id}')">${a.emoji} ${escHtml(a.name)}</button>`
+  ).join("");
+
+  loadAgentSessions(S._sessAgent);
+}
+
+async function loadAgentSessions(agentId) {
+  S._sessAgent = agentId;
+  const sessions = await api("sessions/" + agentId);
+  const el = document.getElementById("sessions-list");
+
+  // Update tab active state
+  document.querySelectorAll("#session-agent-tabs .filter-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.textContent.includes(S.agents.find(a => a.id === agentId)?.name || agentId));
+  });
+
+  if (!sessions.length) { el.innerHTML = '<div class="empty">No sessions for this agent</div>'; return; }
+  el.innerHTML = sessions.map(s => `
+    <div class="card" style="margin-bottom:8px;padding:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="badge ${s.channel === "discord" ? "purple" : "gray"}">${escHtml(s.channel)}</span>
+        <span class="badge gray">${escHtml(s.chatType)}</span>
+        <span style="flex:1"></span>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--text3);">${fmtDate(s.updatedAt)}</span>
+      </div>
+      <div style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-top:6px;">
+        ${escHtml(s.sessionId.slice(0, 8))}... ${s.aborted ? '<span class="badge red">aborted</span>' : ""}
+      </div>
+    </div>
+  `).join("");
+}
+
+// ── Cron ───────────────────────────────────────────────────────────
+async function loadCron() {
+  S.cron = await api("cron");
+  const el = document.getElementById("cron-list");
+  if (!S.cron.jobs?.length) {
+    el.innerHTML = `<div class="empty">No scheduled jobs<br><br>
+      <span style="font-size:11px;color:var(--text3);">Use <code style="background:var(--bg3);padding:2px 6px;border-radius:4px;">openclaw cron add</code> to schedule tasks</span></div>`;
+    return;
+  }
+  el.innerHTML = S.cron.jobs.map(j => `<div class="card" style="margin-bottom:8px;padding:12px;">${escHtml(JSON.stringify(j))}</div>`).join("");
+}
+
+// ── Logs ───────────────────────────────────────────────────────────
+async function loadLogs() {
+  const lines = await api("logs?count=100");
+  S.logLines = lines;
+  renderLogs();
+}
+
+function setLogFilter(f) {
+  S.logFilter = f;
+  document.querySelectorAll("#page-logs .filter-btn").forEach(b => b.classList.remove("active"));
+  event.target.classList.add("active");
+  renderLogs();
+}
+
+function filterLogs(q) {
+  S.logSearch = q.toLowerCase();
+  renderLogs();
+}
+
+function renderLogs() {
+  let lines = S.logLines;
+  if (S.logFilter === "error") lines = lines.filter(l => /error|fatal|exception/i.test(l));
+  if (S.logFilter === "info") lines = lines.filter(l => /info/i.test(l));
+  if (S.logSearch) lines = lines.filter(l => l.toLowerCase().includes(S.logSearch));
+
+  const viewer = document.getElementById("log-viewer");
+  viewer.innerHTML = lines.length
+    ? lines.map(l => {
+        const cls = /error|fatal|exception/i.test(l) ? " error" : /warn/i.test(l) ? " warn" : "";
+        return `<div class="log-line${cls}">${escHtml(l)}</div>`;
+      }).join("")
+    : '<div class="empty">No matching log lines</div>';
+
+  viewer.scrollTop = viewer.scrollHeight;
+}
+
+// ── Security / CORD ────────────────────────────────────────────────
+function renderCordStats(stats) {
+  S.cordStats = stats;
+  const { total, counts, blockRate, topDimensions } = stats;
+
+  // Stats row
+  document.getElementById("cord-stats-row").innerHTML = [
+    chipHtml(total, "Total Evals", "🔍"),
+    chipHtml(counts.ALLOW || 0, "Allowed", "✅"),
+    chipHtml(counts.BLOCK || 0, "Blocked", "🚫"),
+    chipHtml(counts.CHALLENGE || 0, "Challenged", "🟠"),
+  ].join("");
+
+  // Ring
+  const pct = parseFloat(blockRate) || 0;
+  document.getElementById("block-pct").textContent = pct.toFixed(1) + "%";
+  document.getElementById("block-sub").textContent = `${counts.BLOCK || 0} of ${total} blocked`;
+  const circ = 263.9;
+  document.getElementById("block-ring").style.strokeDashoffset = circ - (pct / 100) * circ;
+  document.getElementById("block-ring").style.stroke = pct < 5 ? "#22c55e" : pct < 20 ? "#eab308" : "#ef4444";
+
+  // Risk dims
+  const dims = document.getElementById("risk-dims");
+  dims.innerHTML = topDimensions.length
+    ? topDimensions.map(d => `<div class="card-stat"><span class="card-stat-label">${escHtml(d.name)}</span><span class="card-stat-value" style="color:var(--block)">${d.count}</span></div>`).join("")
+    : '<div class="empty" style="padding:8px;">No signals</div>';
+
+  // Update dashboard stats too
+  const dashStats = document.getElementById("dash-stats");
+  if (dashStats) {
+    const existing = dashStats.querySelectorAll(".stat-chip");
+    if (existing.length >= 4) {
+      existing[3].querySelector(".stat-num").textContent = total;
+    }
+  }
+}
+
+function renderCordFeed(entries, containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = entries.slice(0, 30).map(e => {
+    const d = (e.decision || "ALLOW").toLowerCase();
+    const score = e.score === 99 ? "∞" : (typeof e.score === "number" ? e.score.toFixed(1) : "?");
+    return `<div class="decision-card ${d}">
+      <div class="dc-top">
+        <span class="dc-badge ${d}">${e.decision || "ALLOW"}</span>
+        <span class="dc-score">${score}</span>
+        <span class="dc-time">${fmtTime(e.timestamp)}</span>
+      </div>
+      ${e.proposal ? `<div class="dc-text">${escHtml((e.proposal || "").slice(0, 80))}</div>` : ""}
+    </div>`;
+  }).join("") || '<div class="empty">No CORD decisions yet</div>';
+}
+
+function prependDecision(entry, containerId) {
+  const el = document.getElementById(containerId);
+  const d = (entry.decision || "ALLOW").toLowerCase();
+  const score = entry.score === 99 ? "∞" : (typeof entry.score === "number" ? entry.score.toFixed(1) : "?");
+  const html = `<div class="decision-card ${d}">
+    <div class="dc-top">
+      <span class="dc-badge ${d}">${entry.decision || "ALLOW"}</span>
+      <span class="dc-score">${score}</span>
+      <span class="dc-time">${fmtTime(entry.timestamp)}</span>
+    </div>
+    ${entry.proposal ? `<div class="dc-text">${escHtml((entry.proposal || "").slice(0, 80))}</div>` : ""}
+  </div>`;
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  el.insertBefore(div.firstElementChild, el.firstChild);
+  // Keep max 30
+  while (el.children.length > 30) el.removeChild(el.lastChild);
+}
+
+// ── SSE Connection ─────────────────────────────────────────────────
+function connectSSE() {
+  const dot = document.getElementById("live-dot");
+  const label = document.getElementById("live-label");
+  dot.style.background = "#eab308";
+  label.textContent = "CONNECTING";
+
+  const es = new EventSource("/api/stream");
+
+  es.addEventListener("init", (e) => {
+    const { entries, stats } = JSON.parse(e.data);
+    S.cordEntries = entries;
+    S.cordStats = stats;
+    renderCordStats(stats);
+    renderCordFeed(entries, "dash-feed");
+    renderCordFeed(entries, "cord-feed");
+    dot.style.background = "var(--allow)";
+    label.textContent = "LIVE";
+  });
+
+  es.addEventListener("decision", (e) => {
+    const entry = JSON.parse(e.data);
+    S.cordEntries.unshift(entry);
+    prependDecision(entry, "dash-feed");
+    prependDecision(entry, "cord-feed");
+  });
+
+  es.addEventListener("cord-stats", (e) => {
+    renderCordStats(JSON.parse(e.data));
+  });
+
+  es.addEventListener("log", (e) => {
+    const line = JSON.parse(e.data);
+    S.logLines.push(line);
+    if (S.logLines.length > 500) S.logLines.shift();
+    if (S.page === "logs") renderLogs();
+  });
+
+  es.onerror = () => {
+    dot.style.background = "var(--block)";
+    dot.style.animation = "none";
+    label.textContent = "RECONNECTING";
+    es.close();
+    setTimeout(connectSSE, 3000);
+  };
+}
+
+// ── Init ───────────────────────────────────────────────────────────
+loadDashboard();
+connectSSE();
+</script>
+</body>
+</html>

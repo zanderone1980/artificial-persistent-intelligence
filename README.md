@@ -7,7 +7,7 @@ npm install cord-engine
 npx cord-engine demo  # Watch it block attacks in real-time
 ```
 
-![Version](https://img.shields.io/badge/Version-4.1.0-blue)
+![Version](https://img.shields.io/badge/Version-4.2.0-blue)
 ![Red Team Results](https://img.shields.io/badge/Red%20Team-40%2F40%20Blocked-brightgreen)
 ![Tests](https://img.shields.io/badge/Tests-942%20Passing-brightgreen)
 ![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20External-blue)
@@ -175,6 +175,40 @@ Every `invoke()`, `execute()`, and `generate()` call is gated through CORD. If C
 11. **Runtime Containment** — Sandboxed execution with path, command, and network limits
 
 **Every layer has been red-teamed.** See `tests/redteam.test.js` for all 40 attack vectors and `THREAT_MODEL.md` for the full threat model.
+
+## OpenClaw Command Center
+
+**Real-time agent management dashboard — zero dependencies.**
+
+```bash
+npm run oc-dashboard    # http://localhost:3001
+```
+
+The Command Center is a web dashboard for managing the full OpenClaw AI agent system. It reads directly from `~/.openclaw/` and streams live events via SSE.
+
+**8 Pages:**
+
+| Page | What it does |
+|------|-------------|
+| Dashboard | Agent status cards, skill count, live CORD event feed |
+| Agents | Browse all agents, edit workspace files (IDENTITY, SOUL, USER, HEARTBEAT) |
+| Skills | Search/filter across all skills (workspace, managed, bundled) |
+| Channels | Discord channel config + connection status |
+| Sessions | Active gateway sessions |
+| Cron | Scheduled heartbeat tasks |
+| Logs | Gateway log viewer |
+| Security | CORD decision feed, block rate ring, risk signal breakdown |
+
+**4 Agents:**
+
+| Agent | Emoji | Role |
+|-------|-------|------|
+| Lazarus | ⚡ | Main assistant — general purpose |
+| Pink | 🩷 | Zander Pink brand operations — orders, inventory, customer comms |
+| Sentinel | 🛡️ | CORD security — test suite, red team, threat research |
+| Pixel | 📱 | Social media — Twitter/X, Instagram, TikTok content + posting |
+
+All agents share the `cord-security` skill — every action is CORD-gated before execution. Token/key sanitization is applied to all API responses.
 
 ## Battle-Tested
 
@@ -346,7 +380,7 @@ const cord = require('cord-engine');
 
 ## Documentation
 
-- **[Changelog](CHANGELOG.md)** — Version history from v1.0.0 to v4.1.0
+- **[Changelog](CHANGELOG.md)** — Version history from v1.0.0 to v4.2.0
 - **[Threat Model](THREAT_MODEL.md)** — Attacker capabilities, TCB, all 40 red team vectors catalogued
 - **[VIGIL Guide](vigil/README.md)** — 8-layer threat patrol daemon
 - **[CORD Reference](cord/README.md)** — API surface, framework adapters, configuration

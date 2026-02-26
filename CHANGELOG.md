@@ -3,6 +3,23 @@
 All notable changes to CORD Engine are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [4.2.0] — 2026-02-25
+
+### Added
+- **OpenClaw Command Center** — real-time agent management dashboard (zero dependencies)
+  - 8 pages: Dashboard, Agents, Skills, Channels, Sessions, Cron, Logs, Security
+  - Live SSE streaming of CORD decisions and gateway logs
+  - In-browser agent workspace editor (SOUL.md, IDENTITY.md, etc.)
+  - Token/key sanitization on all API responses
+- **Multi-agent system** — 4 specialized agents managed through OpenClaw
+  - Lazarus (⚡ main), Pink (🩷 brand ops), Sentinel (🛡️ security), Pixel (📱 social media)
+- **Pixel social media agent** — Twitter/X, Instagram, TikTok content management
+  - Social posting skill with Twitter API v2 integration
+  - Content creator skill with brand voice guide and caption templates
+  - Social analytics skill (shared) with weekly report format
+  - Content calendar cadence and hashtag strategy
+- **Custom agent skills** — brand-ops, sentinel-ops, cord-security, social-posting, content-creator, social-analytics
+
 ## [4.1.0] — 2026-02-25
 
 ### Added

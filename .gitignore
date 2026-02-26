@@ -22,6 +22,10 @@ env/
 .coverage
 htmlcov/
 
+# Build artifacts
+*.tgz
+npm_output.txt
+
 # macOS
 .DS_Store
 .env
