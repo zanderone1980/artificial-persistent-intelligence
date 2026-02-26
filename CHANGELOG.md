@@ -18,7 +18,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
   - Content creator skill with brand voice guide and caption templates
   - Social analytics skill (shared) with weekly report format
   - Content calendar cadence and hashtag strategy
-- **Custom agent skills** — brand-ops, sentinel-ops, cord-security, social-posting, content-creator, social-analytics
+- **Shopify integration skill** — full Admin API coverage for Pink agent
+  - Orders: list, get, fulfill with tracking
+  - Products: list, create, update inventory levels
+  - Customers: search, list
+  - Analytics: order counts by status, product counts
+  - Fallback to browser-based Shopify admin when API keys unavailable
+- **Custom agent skills** — brand-ops, shopify-ops, sentinel-ops, cord-security, social-posting, content-creator, social-analytics
 
 ## [4.1.0] — 2026-02-25
 

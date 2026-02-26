@@ -204,7 +204,7 @@ The Command Center is a web dashboard for managing the full OpenClaw AI agent sy
 | Agent | Emoji | Role |
 |-------|-------|------|
 | Lazarus | ⚡ | Main assistant — general purpose |
-| Pink | 🩷 | Zander Pink brand operations — orders, inventory, customer comms |
+| Pink | 🩷 | Zander Pink brand operations — Shopify orders, inventory, customer comms |
 | Sentinel | 🛡️ | CORD security — test suite, red team, threat research |
 | Pixel | 📱 | Social media — Twitter/X, Instagram, TikTok content + posting |
 
